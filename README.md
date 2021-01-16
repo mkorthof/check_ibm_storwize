@@ -9,7 +9,7 @@ The .cfg files were adapted to work as best posible with Nagios Core.
 
 ### Script
 
-Get just the modfied Perl script:
+Get the modfied Perl script only:
 [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl)
 
 ### Example
@@ -52,7 +52,7 @@ Flags:
 
 ### Changes
 
-See [CHANGES.md](/Changes.md)
+See [CHANGES.md](/CHANGES.md)
 
 ---
 

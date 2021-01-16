@@ -21,7 +21,7 @@
 
 ## 2019-06-15
 
-- fixed: warn en crit opties
+- fixed: warn en crit options
 - changed: disks without Status 2 'OK' (or 'online') = CRITICAL
 - changed: no EnclosureIDGoal or SlotIDGoal = UNKNOWN
 - added: skip element option with regex (e.g. for "test" pools/disks)
