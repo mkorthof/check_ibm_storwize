@@ -243,14 +243,14 @@ my %rcmap = (
         },
         OperationalStatus => $rcmap_default{'OperationalStatus'}
     },
-	BackendVolume => {
-		Access => {
-			0 => 'Unknown',
-			1 => 'Readable',
-			2 => 'Writable',
-			3 => 'Read/Write Supported',
-			4 => 'Write Once',
-		},
+    BackendVolume => {
+        Access => {
+            0 => 'Unknown',
+            1 => 'Readable',
+            2 => 'Writable',
+            3 => 'Read/Write Supported',
+            4 => 'Write Once',
+        },
         NativeStatus => {
             0 => 'Offline',
             1 => 'Online',
@@ -258,7 +258,7 @@ my %rcmap = (
             3 => 'Excluded',
         },
         OperationalStatus => $rcmap_default{'OperationalStatus'}
-	},
+    },
 );
 my %output = (
     perfStr => '',
@@ -333,35 +333,35 @@ sub cli {
 # Takes: bytes
 # Returns: size
 sub convSize {
-    my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
-	if ( $$cfg{'bytes'} ne 1 ) {
-		my $size = 0;
+   my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
+   if ( $$cfg{'bytes'} ne 1 ) {
+        my $size = 0;
         $size = $s if ($s =~ /^\d+$/);
-		++$n and $size /= 1024 until $size < 1024;
-		if ($n > 0) {
-			return sprintf "%.0f%s", $size, ( qw[ b KiB MiB GiB TiB ] )[$n] if ($n > 0);
-		}
+        ++$n and $size /= 1024 until $size < 1024;
+        if ($n > 0) {
+            return sprintf "%.0f%s", $size, ( qw[ b KiB MiB GiB TiB ] )[$n] if ($n > 0);
+        }
         return $size
-	}
-	return $s;
+    }
+    return $s;
 }
 
 #
 # Convert speed to rounded KB MB GB TB (1000)
-# Takes: bites
+# Takes: bytes
 # Returns: speed
 sub convSpeed {
     my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
-	if ( $$cfg{'bytes'} ne 1 ) {
+    if ( $$cfg{'bytes'} ne 1 ) {
         my $speed = 0;
         $speed = $s if ($s =~ /^\d+$/);
-        ++$n and $speed /= 1000 until $speed < 1024;
-		if ($n > 0) {
-			return sprintf "%.0f%s", $speed, ( qw[ bit Kbit Mbit Gbit Tbit ] )[$n] if ($n > 0);
-		}
+        ++$n and $speed /= 1000 until $speed < 1000;
+        if ($n > 0) {
+            return sprintf "%.0f%s", $speed, ( qw[ bit Kbit Mbit Gbit Tbit ] )[$n] if ($n > 0);
+        }
         return $speed
-	}
-	return $s;
+    }
+    return $s;
 }
 
 #
@@ -389,7 +389,7 @@ sub queryStorwize {
     my $path_count_max = 0;
     my $path_count_half = 0;
     my $quorum_active = '';
-	my $stopped_count = 0;
+    my $stopped_count = 0;
     my $used_count_warn = 0;
     my $used_count_crit = 0;
     my $skipped_count = 0;
@@ -434,7 +434,7 @@ sub queryStorwize {
                 }
                 if ($$cfg{'debug'} eq 1) {
                     print("DEBUG: $obj{'ElementName'} OperationalStatus=$$rcmap{'HostCluster'}{'OperationalStatus'}{$obj{'OperationalStatus'}} " .
-						"skip=$$cfg{'skip'} PortCount=$obj{'PortCount'} MappingCount=$obj{'MappingCount'}\n");
+                        "skip=$$cfg{'skip'} PortCount=$obj{'PortCount'} MappingCount=$obj{'MappingCount'}\n");
                 }
                 if ($obj{'OperationalStatus'} != 2) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'HostCluster'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
@@ -472,7 +472,7 @@ sub queryStorwize {
                         $inst_count_ok++;
                     }
                 } elsif ($obj{'OperationalStatus'} == 10) {
-				    $stopped_count++;
+                    $stopped_count++;
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}port$obj{'PortID'}_status=$obj{'OperationalStatus'};;;;";
                 #$$out{'perfStr'} .= " name=$obj{'Name'};;;;";
@@ -488,7 +488,7 @@ sub queryStorwize {
             # Check for:
             #   OperationalStatus
             #
-			# One port down: warn, two or more: critical (excl 'Stopped')
+            # One port down: warn, two or more: critical (excl 'Stopped')
             if ($$cfg{'check'} eq 'iSCSIProtocolEndpoint') {
                 my $_element = (split '\.', "$obj{'ElementName'}")[-1];
                 my $_name = (split ',', (split '\.', "$obj{'Name'}")[-1])[-1];
@@ -496,19 +496,19 @@ sub queryStorwize {
                     print("DEBUG: $obj{'ElementName'} _element=$_element Name=$obj{'Name'} _name=$_name OperationalStatus=$$rcmap{'iSCSIProtocolEndpoint'}{'OperationalStatus'}{$obj{'OperationalStatus'}}\n");
                     print("\n\nDEBUG: inst_count=$inst_count\n\n");
                 }
-				if ($obj{'OperationalStatus'} != 2 && $obj{'OperationalStatus'} != 10) {
-					$$out{'retStr'} .= " ${_element},${_name}($$rcmap{'iSCSIProtocolEndpoint'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
-					$inst_count_nok++;
-				} elsif ($obj{'OperationalStatus'} == 10) {
-					$stopped_count++;
-				} else {
-					$inst_count_ok++;
-				}
-				if ($inst_count_nok > 0 && $inst_count_nok < 2) {
-					$$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-				} elsif ($inst_count_nok > 1) {
-					$$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
-				}
+                if ($obj{'OperationalStatus'} != 2 && $obj{'OperationalStatus'} != 10) {
+                    $$out{'retStr'} .= " ${_element},${_name}($$rcmap{'iSCSIProtocolEndpoint'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                    $inst_count_nok++;
+                } elsif ($obj{'OperationalStatus'} == 10) {
+                    $stopped_count++;
+                } else {
+                    $inst_count_ok++;
+                }
+                if ($inst_count_nok > 0 && $inst_count_nok < 2) {
+                    $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                } elsif ($inst_count_nok > 1) {
+                    $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
+                }
                 $$out{'perfStr'} .= " $obj{'ElementName'}_status=$obj{'OperationalStatus'};;;;";
                 #$$out{'perfStr'} .= " $obj{'ElementName'}_identifier=$obj{'Identifier'};;;;";
             }
@@ -541,11 +541,11 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-				if ($inst_count_nok >= $_warning && $inst_count_nok <= $_critical) {
-					$$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-				} elsif ($inst_count_nok >= $_critical) {
-					$$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
-				}
+                if ($inst_count_nok >= $_warning && $inst_count_nok <= $_critical) {
+                    $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                } elsif ($inst_count_nok >= $_critical) {
+                    $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
+                }
                 $$out{'perfStr'} .= " $obj{'ElementName'}_status=$obj{'OperationalStatus'};;;;";
                 $$out{'perfStr'} .= " $obj{'ElementName'}_cluster:$obj{'HostClusterName'}_id=$obj{'HostClusterId'};;;;";
                 #$$out{'perfStr'} .= " hostcount=$obj{'HostCount'};;;;";
@@ -557,14 +557,14 @@ sub queryStorwize {
             # State                                Systems  Support for active 
             #                                    connected    remote copy I/O        Comments
             # ----------------------------------------------------------------------------------------------------------------------------------------------------------
-            # Partially_Configured_Local			No            No                 This state indicates that the initial discovery is complete.
-            # Fully_Configured						Yes           Yes                Discovery successfully completed between two systems, and the two systems can establish remote copy relationships.
-            # Fully_Configured_Stopped				Yes           Yes                The partnership is stopped on the system.
-            # Fully_Configured_Remote_Stopped		Yes           No                 The partnership is stopped on the remote system.
-            # Not_Present							Yes           No				 The two systems cannot communicate with each other. This state is also seen when data paths between the two systems are not established.
-            # Fully_Configured_Exceeded				Yes           No				 There are too many systems in the network, and the partnership from the local system to remote system is disabled.
-            # Fully_Configured_Excluded				No            No				 The connection is excluded because of too many problems, or either system cannot support the I/O work load for the Metro Mirror and Global
-            #																		 Mirror relationships.  
+            # Partially_Configured_Local            No            No                 This state indicates that the initial discovery is complete.
+            # Fully_Configured                      Yes           Yes                Discovery successfully completed between two systems, and the two systems can establish remote copy relationships.
+            # Fully_Configured_Stopped              Yes           Yes                The partnership is stopped on the system.
+            # Fully_Configured_Remote_Stopped       Yes           No                 The partnership is stopped on the remote system.
+            # Not_Present                           Yes           No                 The two systems cannot communicate with each other. This state is also seen when data paths between the two systems are not established.
+            # Fully_Configured_Exceeded             Yes           No                 There are too many systems in the network, and the partnership from the local system to remote system is disabled.
+            # Fully_Configured_Excluded             No            No                 The connection is excluded because of too many problems, or either system cannot support the I/O work load for the Metro Mirror and Global
+            #                                                                        Mirror relationships.  
             # Check for:
             #   PartnershipStatus
             #
@@ -590,20 +590,20 @@ sub queryStorwize {
             # Check for:
             #   NativeStatus, OperationalStatus, RaidStatus
             #
-			# Warn on sync/init status
+            # Warn on sync/init status
             if ($$cfg{'check'} eq 'Array') {
                 if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
                 if ($$cfg{'debug'} eq 1) {
                     print("DEBUG: $obj{'ElementName'}  NativeStatus=$obj{'NativeStatus'} OperationalStatus=$obj{'OperationalStatus'} RaidStatus=$obj{'RaidStatus'}\n");
-				}
+                }
                 if ($obj{'NativeStatus'} != 1 || $obj{'OperationalStatus'} != 2 || $obj{'RaidStatus'} == 1 || $obj{'RaidStatus'} == 2) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Array'}{'NativeStatus'}{$obj{'NativeStatus'}}," . 
-						"$$rcmap{'Array'}{'OperationalStatus'}{$obj{'OperationalStatus'}},$$rcmap{'Array'}{'RaidStatus'}{$obj{'RaidStatus'}})";
+                        "$$rcmap{'Array'}{'OperationalStatus'}{$obj{'OperationalStatus'}},$$rcmap{'Array'}{'RaidStatus'}{$obj{'RaidStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
                 } elsif ($obj{'RaidStatus'} == 0 || $obj{'RaidStatus'} == 3 || $obj{'RaidStatus'} == 4) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Array'}{'NativeStatus'}{$obj{'NativeStatus'}}," . 
-						"$$rcmap{'Array'}{'OperationalStatus'}{$obj{'OperationalStatus'}},$$rcmap{'Array'}{'RaidStatus'}{$obj{'RaidStatus'}})";
+                        "$$rcmap{'Array'}{'OperationalStatus'}{$obj{'OperationalStatus'}},$$rcmap{'Array'}{'RaidStatus'}{$obj{'RaidStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                     $inst_count_nok++;
                 } else {
@@ -615,7 +615,7 @@ sub queryStorwize {
             # the 'usual case' RAID devices can be created in one step.
             #
             # Check for:
-            #   
+            #   -
             #
             elsif ($$cfg{'check'} eq 'ArrayBasedOnDiskDrive') {
                 # set default critical/warning to 0
@@ -690,6 +690,7 @@ sub queryStorwize {
             #
             # Check for:
             #   Access, NativeStatus, OperationalStatus, PathCount
+			#
             elsif ( $$cfg{'check'} eq 'BackendVolume' ) {
                 if ($obj{'MaxPathCount'} ne '') {
                     $path_count_max = $obj{'MaxPathCount'};
@@ -756,7 +757,7 @@ sub queryStorwize {
             # Check for:
             #   NativeStatus, OperationalStatus
             #
-			# Replaced 'UsedCapacity/TotalManagedSpace' with 'PhysicalCapacity'
+            # Replaced 'UsedCapacity/TotalManagedSpace' with 'PhysicalCapacity'
             elsif ($$cfg{'check'} eq 'ConcreteStoragePool') {
                 if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
                 # set default warning 85% and critical at 95% usage
@@ -767,9 +768,9 @@ sub queryStorwize {
                 if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
                     $_warning = $$cfg{'warning'};
                 }
-				# my $usedpct=sprintf("%.0f",($obj{'UsedCapacity'}/$obj{'TotalManagedSpace'})*100);
-				my $used = $obj{'PhysicalCapacity'} - $obj{'PhysicalFreeCapacity'};
-				my $usedpct = sprintf("%.0f",(${used}/$obj{'PhysicalCapacity'})*100);
+                # my $usedpct=sprintf("%.0f",($obj{'UsedCapacity'}/$obj{'TotalManagedSpace'})*100);
+                my $used = $obj{'PhysicalCapacity'} - $obj{'PhysicalFreeCapacity'};
+                my $usedpct = sprintf("%.0f",(${used}/$obj{'PhysicalCapacity'})*100);
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1 ) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'ConcreteStoragePool'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'ConcreteStoragePool'}{'OperationalStatus'}{$obj{'OperationalStatus'}},Used:${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -777,15 +778,15 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-				if ($usedpct >= $_warning && $usedpct <= $_critical) {
+                if ($usedpct >= $_warning && $usedpct <= $_critical) {
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-				} elsif ($usedpct >= $_critical) {
+                } elsif ($usedpct >= $_critical) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
-				}
+                }
                 if ($$cfg{'debug'} eq 1) {
                     print("DEBUG: $obj{'ElementName'} usedpct=${usedpct} used=${used} UsedCapacity=$obj{'UsedCapacity'}\n");
-				}
-				$$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%;;;;";
+                }
+                $$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%;;;;";
                 $$out{'perfStr'} .= " used=" . convSize(${used}) . ";;;; total=" . convSize($obj{'PhysicalCapacity'}) . ";;;;";
                 $$out{'perfStr'} .= " mdisks=$obj{'NumberOfBackendVolumes'};;;; vols=$obj{'NumberOfStorageVolumes'};;;;";
             }
@@ -816,7 +817,7 @@ sub queryStorwize {
                 if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
                 if ($obj{'EnclosureStatus'} != 0 || $obj{'OnlineCanisters'} < $obj{'TotalCanisters'} || $obj{'OnlinePSUs'} < $obj{'TotalPSUs'}) {
                     $$out{'retStr'} .= " Enc_$obj{'ElementName'},SN:$obj{'SerialNumber'}($$rcmap{'Enclosure'}{'EnclosureStatus'}{$obj{'EnclosureStatus'}}," .
-						"Canister:$obj{'OnlineCanisters'}/$obj{'TotalCanisters'},PSU:$obj{'OnlinePSUs'}/$obj{'TotalPSUs'})";
+                        "Canister:$obj{'OnlineCanisters'}/$obj{'TotalCanisters'},PSU:$obj{'OnlinePSUs'}/$obj{'TotalPSUs'})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
                 } else {
@@ -937,14 +938,14 @@ sub queryStorwize {
                         $inst_count_ok++;
                     }
                 }
-				if ($$cfg{'debug'} eq 1) {
-					print ("DEBUG: retRC= $$out{'retRC'}\n");
-				}
-				if ($$out{'retRC'} != 0) {
-					if (@mem_elements) {
-						$$out{'retStr'} .= " $obj{'ElementName'}(".join(',', @mem_elements).")";
-					}
-				}
+                if ($$cfg{'debug'} eq 1) {
+                    print ("DEBUG: retRC= $$out{'retRC'}\n");
+                }
+                if ($$out{'retRC'} != 0) {
+                    if (@mem_elements) {
+                        $$out{'retStr'} .= " $obj{'ElementName'}(".join(',', @mem_elements).")";
+                    }
+                }
 
                 $$out{'perfStr'} .= " num_hosts_$obj{'ElementName'}=$obj{'NumberOfHosts'};;;;";
                 $$out{'perfStr'} .= " num_nodes_$obj{'ElementName'}=$obj{'NumberOfNodes'};;;;";
@@ -1057,20 +1058,20 @@ sub queryStorwize {
             #   CacheState(0='Empty',1='Not Empty'), NativeStatus (1='Online'), OperationalStatus (2='OK')
             #
             elsif ($$cfg{'check'} eq 'StorageVolume') {
-				# set default warning at 85%, critical at 95% (set crit to 100 for warnings only)
+                # set default warning at 85%, critical at 95% (set crit to 100 for warnings only)
                 my ($_warning, $_critical) = (85, 95);
-				if (defined $$cfg{'critical'} && $$cfg{'critical'} ne '') {
-					$_critical = $$cfg{'critical'};
-				}
-				if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
-					$_warning = $$cfg{'warning'};
-				}
+                if (defined $$cfg{'critical'} && $$cfg{'critical'} ne '') {
+                    $_critical = $$cfg{'critical'};
+                }
+                if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
+                    $_warning = $$cfg{'warning'};
+                }
                 # Always skip vdisk[0-9] elements because they return false positives
                 if ((($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) || ($obj{'ElementName'} =~ '^vdisk[0-9]')) {
                     $skipped_count++;
                     next;
                 }
-				my $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
+                my $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
                 if ($$cfg{'debug'} eq 1) {
                     print("DEBUG: $obj{'ElementName'} CacheState=$obj{'CacheState'} OperationalStatus=$obj{'OperationalStatus'} NativeStatus=$obj{'NativeStatus'}" .
                         " UncompressedUsedCapacity=" . convSize($obj{'UncompressedUsedCapacity'}) .
@@ -1078,12 +1079,12 @@ sub queryStorwize {
                 }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'StorageVolume'}{'CacheState'}{$obj{'CacheState'}}," . 
-					    "$$rcmap{'StorageVolume'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'StorageVolume'}{'OperationalStatus'}{$obj{'OperationalStatus'}},${usedpct}%)";
+                        "$$rcmap{'StorageVolume'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'StorageVolume'}{'OperationalStatus'}{$obj{'OperationalStatus'}},${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
                 } elsif ($obj{'CacheState'} != 0 && $obj{'CacheState'} != 1) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'StorageVolume'}{'CacheState'}{$obj{'CacheState'}}," .
-						"$$rcmap{'StorageVolume'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'StorageVolume'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                        "$$rcmap{'StorageVolume'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'StorageVolume'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
                         $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                     }
@@ -1091,20 +1092,20 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-				if ($usedpct >= $_warning && $usedpct <= $_critical) {
+                if ($usedpct >= $_warning && $usedpct <= $_critical) {
                     $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                     $used_count_warn++;
                     # add critical elements separately, so we can show them first
                     $perfWarnStr .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $perfWarnStr .= " used=" . convSize($obj{'UncompressedUsedCapacity'}). ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
-				} elsif ($usedpct >= $_critical) {
+                } elsif ($usedpct >= $_critical) {
                     $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $used_count_crit++;
                     $perfCritStr .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $perfCritStr .= " used=" . convSize($obj{'UncompressedUsedCapacity'}). ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
-				}
+                }
                 if ($usedpct <= $_warning && $usedpct <= $_critical) {
                     $$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $$out{'perfStr'} .= " used=" . convSize($obj{'UncompressedUsedCapacity'}) . ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
@@ -1204,10 +1205,10 @@ sub queryStorwize {
         }
     }
 
-	# Special case: No spare, add to *end* of retStr
+    # Special case: No spare, add to *end* of retStr
     if ($$cfg{'check'} eq 'IsSpare' && !defined $obj{'SpareStatus'}) {
-		$$out{'retStr'} .= "No spare found";
-	}
+        $$out{'retStr'} .= "No spare found";
+    }
 
     # Special case: output any critical and warning data first
     $$out{'perfStr'} = "${perfCritStr}${perfWarnStr}" . $$out{'perfStr'};
@@ -1253,7 +1254,7 @@ Flags:
     -c crit     Critical threshold (only for checks with '*')
     -w warn     Warning threshold (only for checks with '*')
     -s skip     Skip element(s) using regular expression
-    -b bytes	Do not convert bytes to MiB GiB TiB
+    -b bytes    Do not convert bytes to MiB GiB TiB
 
 EOF
     exit;
