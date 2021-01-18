@@ -3,7 +3,7 @@ pack-storwize
 
 ## Updated version
 
-IBM Storwize monitoring check modified for standard Nagios and supports V7000(g3). Original script was made for 'Shinken', a Nagios rewrite.
+IBM Storwize & FlashSystem monitoring check modified for standard Nagios and supports V7000(g3). Original script was made for 'Shinken', a Nagios rewrite.
 
 The .cfg files were adapted to work as best posible with Nagios Core.
 
