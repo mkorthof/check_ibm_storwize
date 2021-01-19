@@ -1,5 +1,9 @@
 # Changes
 
+## 2021-01-19
+
+- changed: small fix for convSpeed, typos and clearified readme
+
 ## 2020-09-21
 
 - changed: warn instead of crit for raidstatus=0 (unknown/expand)

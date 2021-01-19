@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # nagios: +epn
 #
-# IBM Storwize health status plugin for Nagios
+# IBM Storwize & FlashSystem health status plugin for Nagios
 # Updated version: works with latest code, V7000 G3 model and iSCSI
 # Needs wbemcli to query the Storwize Arrays CIMOM server.
 #
