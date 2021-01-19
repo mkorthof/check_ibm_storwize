@@ -1,26 +1,29 @@
-pack-storwize
-========
+# IBM Storwize & FlashSystem Nagios plugin
 
 ## Updated version
 
-IBM Storwize & FlashSystem monitoring check, modified for standard Nagios and supports V7000 (Gen3) and iSCSI. This plugin was tested with Spectrum Virtualize upgrade v8.3.1 (and older) code.
+IBM Storwize & FlashSystem monitoring check:
 
-Original script was made for "Shinken", a Nagios rewrite. This version is a fork, [see below]( #Original-version) for more information.
+- modified for standard Nagios
+- supports V7000 (Gen3) and iSCSI
+- plugin was tested with Spectrum Virtualize upgrade v8.3.1 (and older) code
+
+Original script was made for "Shinken", a Nagios rewrite. This version is a fork, for more information [see below]( #Original-version).
 
 The .cfg files were adapted to work as best posible with Nagios Core.
+
+**Requirements:**
+
+- open CIM port (TCP/5989) and a WBEM/CIM client ([see below](#README))
+- a (nagios) user/password on device, create it first using CLI (mkuser) or GUI
 
 ### Script
 
 Get the modfied Perl script only: [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl)
 
-#### Requirements
-
-- wbem client ([see below](#README)), default CIM port is 5989
-- create (nagios) user/password on device using CLI (mkuser) or GUI
-
 ### Example
 
-`check_ibm_storwize.pl -H ibm01.example.com -P 123 -u nagios -p <PASSWOD> -C StorageVolume`
+`check_ibm_storwize.pl -H ibm01.example.com -P 123 -u nagios -p <PASSWORD> -C StorageVolume`
 
 ### Usage
 
@@ -64,7 +67,7 @@ See [CHANGES.md](/CHANGES.md)
 
 ## Original version
 
-By [Forlot Romain](https://github.com/claneys)
+"pack-storwize" by [Forlot Romain](https://github.com/claneys)
 
 ### README
 
@@ -80,11 +83,10 @@ You must install Standard Based Linux Instrumentation package:
 
 ## Previous Version
 
-By [Frank Fegert](https://www.bityard.org/blog/about)
+"check_ibm_svc.pl" by [Frank Fegert](https://www.bityard.org/blog/about)
 
 ### Blog posts:
 
 - [https://www.bityard.org/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update](https://www.bityard.org/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update)
 - [https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize](https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize)
 
-Contains instructions on how to test wbemcli is wreoking
