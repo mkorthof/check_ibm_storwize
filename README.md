@@ -12,6 +12,8 @@ Original script was made for "Shinken", a Nagios rewrite. This version is a fork
 
 The .cfg files were adapted to work as best posible with Nagios Core.
 
+![Screenshot](screenshot.png)
+
 **Requirements:**
 
 - open CIM port (TCP/5989) and a WBEM/CIM client ([see below](#README))
