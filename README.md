@@ -1,40 +1,52 @@
-# IBM Storwize & FlashSystem Nagios plugin
+# IBM Storwize and FlashSystem Monitoring plugin
+
+Checks overal health of IBM FlashSystem family devices (formerly Storwize). Includes storage, network and cluster status.
+
+https://en.wikipedia.org/wiki/IBM_FlashSystem
+
+https://en.wikipedia.org/wiki/IBM_Storwize
 
 ## Updated version
 
-IBM Storwize & FlashSystem monitoring check:
+Main additions and changes:
 
-- modified for standard Nagios
+- script modified for standard Nagios
 - supports V7000 (Gen3) and iSCSI
-- plugin was tested with Spectrum Virtualize upgrade v8.3.1 (and older) code
+- tested plugin with Spectrum Virtualize upgrade v8.3.1 code (and older)
+- template cfg files adapted to work as best posible with Nagios Core
+- configurable critical/warning thresholds, with defaults
 
-Original script was made for "Shinken", a Nagios rewrite. This version is a fork, for more information [see below]( #Original-version).
+![Screenshot](docs/screenshot.png)
 
-The .cfg files were adapted to work as best posible with Nagios Core.
+Original script was made for "Shinken", a Nagios rewrite. This version is a fork, for more information see: [docs/Sources.md](docs/Sources.md).
 
-![Screenshot](screenshot.png)
+## Installation
 
-**Requirements:**
+### Requirements
 
-- open CIM port (TCP/5989) and a WBEM/CIM client ([see below](#README))
-- a (nagios) user/password on device, create it first using CLI (mkuser) or GUI
+- Nagios, Icinga or other compatible monitoring system
+- Perl 5, if it's not already installed  (`apt` or `yum install perl`)
+- open CIM port (TCP/5989) and a WBEM/CIM client (`apt` or `yum install sblim-wbemcli`)
+- a ("nagios") account to login to storage device (create in GUI or `mkuser` in CLI)
 
 ### Script
 
-Get the modfied Perl script only: [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl)
+The main updated Perl script is location in "libexec". Place it on your Nagios server for example.
 
-### Example
+If you only want the script, download [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl)
 
-`check_ibm_storwize.pl -H ibm01.example.com -P 123 -u nagios -p <PASSWORD> -C StorageVolume`
+#### Example
 
-### Usage
+`check_ibm_storwize.pl -H ibm01.example.com -P 5988 -u nagios -p <PASSWORD> -C StorageVolume`
+
+#### Usage
 
 `check_ibm_storwize.pl -h`
 
 ```
 
-IBM Storwize & FlashSystem health status plugin for Nagios.
-Needs wbemcli to query the Storwize Arrays CIMOM server.
+IBM Storwize & FlashSystem health status plugin for Nagios
+Needs 'wbemcli' to query the Storwize Arrays CIMOM server
 
 Usage: check_ibm_storwize.pl [-h] -H host [-P port] -u user -p password -C check [-c crit] [-w warn]
 
@@ -42,53 +54,53 @@ Flags:
 
     -C check    Check to run. Currently available checks:
 
-                Array, ArrayBasedOnDiskDrive*, BackendVolume, Cluster, ConcreteStoragePool*,
+                Array, ArrayBasedOnDiskDrive*, BackendVolume, Cluster, ConcreteStoragePool**,
                 DiskDrive, Enclosure, EthernetPort, FCPort, IOGroup*, IsSpare, MasterConsole,
-                MirrorExtent, Node, QuorumDisk, StorageVolume
+                MirrorExtent, Node, QuorumDisk, StorageVolume**
                 BackendController, BackendTargetSCSIProtocolEndpoint, FCPortStatistics
-                ProtocolEndpoint, iSCSIProtocolEndpoint, ProtocolController, RemoteCluster,
+                ProtocolEndpoint, iSCSIProtocolEndpoint*, ProtocolController*, RemoteCluster,
                 HostCluster
 
-    -h          Print this help message.
-    -H host     Hostname of IP of the SVC cluster.
-    -P port     CIMOM port on the SVC cluster.
-    -p          Password for CIMOM access on the SVC cluster.
-    -u          User with CIMOM access on the SVC cluster.
-    -c crit     Critical threshold (only for checks with '*')
-    -w warn     Warning threshold (only for checks with '*')
+    -h          Print this help message
+    -H host     Hostname of IP of the SVC cluster
+    -P port     CIMOM port on the SVC cluster
+    -p          Password for CIMOM access on the SVC cluster
+    -u          User with CIMOM access on the SVC cluster
+    -c crit     Critical threshold as <n> NOK items or as % (only for checks with '*' or '**')
+    -w warn     Warning threshold as <n> NOK items or as % (only for checks with '*' or '**')
     -s skip     Skip element(s) using regular expression
     -b bytes    Do not convert bytes to MiB GiB TiB
 
 ```
 
-### Changes
+## Defaults
 
-See [CHANGES.md](/CHANGES.md)
+- CIMON port 5989 (TLS)
+- Convert bytes to MiB GiB TiB
 
----
+Check thresholds:
 
-## Original version
+- ArrayBasedOnDiskDrive Spares: **0** ("no Spare", omit)
+- ConcreteStoragePool PhysicalCapacity: WARN at **80**% usage, CRITICAL at **90**% 
+- IOGroup FreeMemory: **0** Bytes (omit)
+- iSCSIProtocolEndpoint: WARN at **1** port down, **2** or more is CRITICAL
+- ProtocolController: WARN at **3** hosts down, **4** or more is CRITICAL
+- StorageVolume Capacity: WARN at **85**% usage, CRITICAL at **95**% 
 
-"pack-storwize" by [Forlot Romain](https://github.com/claneys)
+Numbers in **bold** can be changed with `-c` and `-w`. If percentage `-c 100` is set, the plugin will warn only.
 
-### README
+NOTE: these checks will WARN if more than half of total items are down: BackendVolume, EtherNetPort and FCPort.
 
-Shinken configuration pack for IBM Storwize Vxxxx 
-You must install Standard Based Linux Instrumentation package:
-- sblim-wbemcli
+## Nagios templates
 
-### Repository
+All nagios config file examples are now in "[etc](etc/objects)" dir. Use as you see fit.
 
-[https://github.com/claneys/pack-storwize](https://github.com/claneys/pack-storwize)
+- etc/objects/commands.cfg (check_commands)
+- etc/objects/discovery.cfg (mgmt https check)
+- etc/objects/template.cfg (host, user, password)
+- etc/objects/timeperiods.cfg (schedule, retries)
+- etc/objects/services/*.cfg
 
----
+## More information
 
-## Previous Version
-
-"check_ibm_svc.pl" by [Frank Fegert](https://www.bityard.org/blog/about)
-
-### Blog posts:
-
-- [https://www.bityard.org/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update](https://www.bityard.org/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update)
-- [https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize](https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize)
-
+See: [docs/README.md](docs/README.md])
