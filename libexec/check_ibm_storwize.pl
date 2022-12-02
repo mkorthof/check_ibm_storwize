@@ -907,7 +907,7 @@ sub queryStorwize {
                     $inst_count_ok++;
                 }
                 $inst_count_half = $inst_count/2;
-                if ($inst_count_ok < $inst_count_half) {
+                if ($inst_count_ok < $inst_count_half && $inst_count_half >= 1) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
             }
