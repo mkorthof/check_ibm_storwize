@@ -1331,32 +1331,32 @@ sub queryStorwize {
 # Takes: nothing
 # Returns: nothing
 sub usage {
-    (my $Me = $0) =~ s!.*/!!;
+    (my $script = $0) =~ s!.*/!!;
     print STDOUT << "EOF";
 
-IBM Storwize health status plugin for Nagios.
-Needs wbemcli to query the Storwize Arrays CIMOM server.
+IBM Storwize & FlashSystem health status plugin for Nagios ($version)
+Needs 'wbemcli' to query the Storwize Arrays CIMOM server
 
-Usage: $Me [-h] -H host [-P port] -u user -p password -C check [-c crit] [-w warn]
+Usage: $script [-h] -H host [-P port] -u user -p password -C check [-c crit] [-w warn]
 
 Flags:
 
     -C check    Check to run. Currently available checks:
 
-                Array, ArrayBasedOnDiskDrive*, BackendVolume, Cluster, ConcreteStoragePool*,
+                Array, ArrayBasedOnDiskDrive*, BackendVolume, Cluster, ConcreteStoragePool**,
                 DiskDrive, Enclosure, EthernetPort, FCPort, IOGroup*, IsSpare, MasterConsole,
-                MirrorExtent, Node, QuorumDisk, StorageVolume
+                MirrorExtent, Node, QuorumDisk, StorageVolume**
                 BackendController, BackendTargetSCSIProtocolEndpoint, FCPortStatistics
-                ProtocolEndpoint, iSCSIProtocolEndpoint, ProtocolController, RemoteCluster,
+                ProtocolEndpoint, iSCSIProtocolEndpoint*, ProtocolController*, RemoteCluster,
                 HostCluster
 
-    -h          Print this help message.
-    -H host     Hostname of IP of the SVC cluster.
-    -P port     CIMOM port on the SVC cluster.
-    -p          Password for CIMOM access on the SVC cluster.
-    -u          User with CIMOM access on the SVC cluster.
-    -c crit     Critical threshold (only for checks with '*')
-    -w warn     Warning threshold (only for checks with '*')
+    -h          Print this help message
+    -H host     Hostname of IP of the SVC cluster
+    -P port     CIMOM port on the SVC cluster
+    -p          Password for CIMOM access on the SVC cluster
+    -u          User with CIMOM access on the SVC cluster
+    -c crit     Critical threshold as <n> NOK items or as % (only for checks with '*' or '**')
+    -w warn     Warning threshold as <n> NOK items or as % (only for checks with '*' or '**')
     -s skip     Skip element(s) using regular expression
     -b bytes    Do not convert bytes to MiB GiB TiB
 
