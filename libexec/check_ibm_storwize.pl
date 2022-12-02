@@ -65,12 +65,14 @@ my %conf = (
         OK => '0',
         WARNING => '1',
         CRITICAL => '2',
-        UNKNOWN => '3' },
+        UNKNOWN => '3'
+    },
     STATUS => {
         0 => 'OK',
         1 => 'WARNING',
         2 => 'CRITICAL',
-        3 => 'UNKNOWN' }
+        3 => 'UNKNOWN'
+    }
 );
 # A hash map of CIMOM return codes to human readable strings according to the "V6.4.0 CIM Agent
 # Developer's Guide for IBM System Storage SAN Volume Controller" and the "Managed Object Format
@@ -398,7 +400,7 @@ sub queryStorwize {
     }
     # TEST mode 2: use local test server (replace objectpath)
     if ($$cfg{'test'} == 2) {
-        $$cfg{'port'} = "5988"; 
+        $$cfg{'port'} = "5988";
         $$cfg{'namespace'} = '/root/cimv2';
         $$cfg{'service'} = "CIM";
         $objectPath = "http://$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}";
@@ -527,7 +529,6 @@ sub queryStorwize {
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}port$obj{'PortID'}_status=$obj{'OperationalStatus'};;;;";
                 #$$out{'perfStr'} .= " name=$obj{'Name'};;;;";
-                #$$out{'perfStr'} .= " port=$obj{'PortID'};;;;";
                 #$$out{'perfStr'} .= " state=$obj{'State'};;;;";
                 $$out{'perfStr'} .= " $obj{'ElementName'}port$obj{'PortID'}_ip=$obj{'IPv4Address'};;;;";
                 #$$out{'perfStr'} .= " $obj{'ElementName'}port$obj{'PortID'}_failover=$obj{'Failover'};;;;";
@@ -539,7 +540,6 @@ sub queryStorwize {
             # Check for:
             #   OperationalStatus
             #
-            # One port down: warn, two or more: critical (excl 'Stopped')
             if ($$cfg{'check'} eq 'iSCSIProtocolEndpoint') {
                 my $_element = (split '\.', "$obj{'ElementName'}")[-1];
                 my $_name = (split ',', (split '\.', "$obj{'Name'}")[-1])[-1];
@@ -573,15 +573,9 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'ProtocolController') {
-                # set default: warning at 3 hosts down, more is critical
-                my ($_warning, $_critical) = (3, 4);
-                if (exists $$cfg{'critical'} && $$cfg{'critical'} ne '') {
-                    $_critical = $$cfg{'critical'};
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
                 }
-                if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
-                    $_warning = $$cfg{'warning'};
-                }
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
                 if ($$cfg{'debug'} eq 1) {
                     print("DEBUG: $obj{'ElementName'} OperationalStatus=$$rcmap{'ProtocolController'}{'OperationalStatus'}{$obj{'OperationalStatus'}} ");
                     print("Name=$obj{'Name'} HostClusterId=$obj{'HostClusterId'} HostClusterName=$obj{'HostClusterName'} DeviceID=$obj{'DeviceID'}\n");
@@ -601,26 +595,30 @@ sub queryStorwize {
                 $$out{'perfStr'} .= " $obj{'ElementName'}_cluster:$obj{'HostClusterName'}_id=$obj{'HostClusterId'};;;;";
                 #$$out{'perfStr'} .= " hostcount=$obj{'HostCount'};;;;";
                 #$$out{'perfStr'} .= " mappingcount=$obj{'MappingCount'};;;;";
-                $$out{'perfStr'} .= " $obj{'ElementName'}_portcount=$obj{'PortCount'};;;;";
+                if ($obj{'PortCount'} ne '') {
+                    $$out{'perfStr'} .= " $obj{'ElementName'}_portcount=$obj{'PortCount'};;;;";
+                }
             }
             # States of IP partnership. Two systems that are partnered to perform remote copy over native IP links.
             #
             # State                                Systems  Support for active 
-            #                                    connected    remote copy I/O        Comments
+            #                                    connected    remote copy I/O     Comments
             # ----------------------------------------------------------------------------------------------------------------------------------------------------------
-            # Partially_Configured_Local            No            No                 This state indicates that the initial discovery is complete.
-            # Fully_Configured                      Yes           Yes                Discovery successfully completed between two systems, and the two systems can establish remote copy relationships.
-            # Fully_Configured_Stopped              Yes           Yes                The partnership is stopped on the system.
-            # Fully_Configured_Remote_Stopped       Yes           No                 The partnership is stopped on the remote system.
-            # Not_Present                           Yes           No                 The two systems cannot communicate with each other. This state is also seen when data paths between the two systems are not established.
-            # Fully_Configured_Exceeded             Yes           No                 There are too many systems in the network, and the partnership from the local system to remote system is disabled.
-            # Fully_Configured_Excluded             No            No                 The connection is excluded because of too many problems, or either system cannot support the I/O work load for the Metro Mirror and Global
-            #                                                                        Mirror relationships.  
+            # Partially_Configured_Local             No            No             This state indicates that the initial discovery is complete.
+            # Fully_Configured                      Yes           Yes             Discovery successfully completed between two systems, and the two systems can establish remote copy relationships.
+            # Fully_Configured_Stopped              Yes           Yes             The partnership is stopped on the system.
+            # Fully_Configured_Remote_Stopped       Yes            No             The partnership is stopped on the remote system.
+            # Not_Present                           Yes            No             The two systems cannot communicate with each other. This state is also seen when data paths between the two systems are not established.
+            # Fully_Configured_Exceeded             Yes            No             There are too many systems in the network, and the partnership from the local system to remote system is disabled.
+            # Fully_Configured_Excluded              No            No             The connection is excluded because of too many problems, or either system cannot support the I/O work load for the Metro Mirror and Global
+            #                                                                     Mirror relationships.
             # Check for:
             #   PartnershipStatus
             #
             if ($$cfg{'check'} eq 'RemoteCluster') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($$cfg{'debug'} eq 1) {
                     print("DEBUG: $obj{'ElementName'} skip=$$cfg{'skip'} ");
                     print("Name=$obj{'Name'} PartnershipStatus=$obj{'PartnershipStatus'} IP=$obj{'IP'} PartnershipBandwidth=$obj{'PartnershipBandwidth'}\n");
@@ -637,15 +635,25 @@ sub queryStorwize {
             # disks. This is not to be confused with externally managed logical units. These
             # mdisks are in the array mode and command lines associated with these mdisks
             # only use the term array in their names.
-            # 
+            #
+            # Values RaidStatus:
+            #   "0", "unknown"
+            #   "1", "offline - array is offline on all nodes"
+            #   "2", "degraded - array has deconfigured or offline members (array is not fully redundant)"
+            #   "3", "syncing - array members all online, array is syncing parity or mirrors to acheive redundancy"
+            #   "4", "initting - array members all online, array is innitting, array is fully redundant"
+            #   "5", "online - array members all online and array is fully redundant"
+            #
             # Check for:
             #   NativeStatus, OperationalStatus, RaidStatus
             #
-            # Warn on sync/init status
+            # CRITICAL: (1)offline, (2)degraded | WARN: (0)unknown (3)sync, (4)init
             if ($$cfg{'check'} eq 'Array') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($$cfg{'debug'} eq 1) {
-                    print("DEBUG: $obj{'ElementName'}  NativeStatus=$obj{'NativeStatus'} OperationalStatus=$obj{'OperationalStatus'} RaidStatus=$obj{'RaidStatus'}\n");
+                    print("DEBUG: $obj{'ElementName'} NativeStatus=$obj{'NativeStatus'} OperationalStatus=$obj{'OperationalStatus'} RaidStatus=$obj{'RaidStatus'}\n");
                 }
                 if ($obj{'NativeStatus'} != 1 || $obj{'OperationalStatus'} != 2 || $obj{'RaidStatus'} == 1 || $obj{'RaidStatus'} == 2) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Array'}{'NativeStatus'}{$obj{'NativeStatus'}}," . 
@@ -653,9 +661,11 @@ sub queryStorwize {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
                 } elsif ($obj{'RaidStatus'} == 0 || $obj{'RaidStatus'} == 3 || $obj{'RaidStatus'} == 4) {
-                    $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Array'}{'NativeStatus'}{$obj{'NativeStatus'}}," . 
-                        "$$rcmap{'Array'}{'OperationalStatus'}{$obj{'OperationalStatus'}},$$rcmap{'Array'}{'RaidStatus'}{$obj{'RaidStatus'}})";
-                    $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                    $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Array'}{'NativeStatus'}{$obj{'NativeStatus'}},";
+                    $$out{'retStr'} .= "$$rcmap{'Array'}{'OperationalStatus'}{$obj{'OperationalStatus'}},$$rcmap{'Array'}{'RaidStatus'}{$obj{'RaidStatus'}})";
+                    if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
+                        $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                    }
                     $inst_count_nok++;
                 } else {
                     $inst_count_ok++;
@@ -701,7 +711,9 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'BackendController') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'OperationalStatus'} != 2) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'BackendController'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -782,10 +794,12 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'Cluster') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'OperationalStatus'} != 2) {
-                    $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Cluster'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                    $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
                 } else {
                     $inst_count_ok++;
@@ -847,7 +861,9 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'DiskDrive') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'Name'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'Name'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if (($obj{'OperationalStatus'} != 32768) && ($obj{'OperationalStatus'} != 2)) {
                     $$out{'retStr'} .= " $obj{'Name'},Enc:$obj{'EnclosureID'},Slot:$obj{'SlotID'}($$rcmap{'DiskDrive'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -865,7 +881,9 @@ sub queryStorwize {
             #   EnclosureStatus, OnlineCanisters, OnlinePSUs
             #
             elsif ($$cfg{'check'} eq 'Enclosure') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'EnclosureStatus'} != 0 || $obj{'OnlineCanisters'} < $obj{'TotalCanisters'} || $obj{'OnlinePSUs'} < $obj{'TotalPSUs'}) {
                     $$out{'retStr'} .= " Enc_$obj{'ElementName'},SN:$obj{'SerialNumber'}($$rcmap{'Enclosure'}{'EnclosureStatus'}{$obj{'EnclosureStatus'}}," .
                         "Canister:$obj{'OnlineCanisters'}/$obj{'TotalCanisters'},PSU:$obj{'OnlinePSUs'}/$obj{'TotalPSUs'})";
@@ -881,7 +899,9 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'EthernetPort') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'OperationalStatus'} != 2 && $obj{'OperationalStatus'} != 11) {
                     $$out{'retStr'} .= " MAC:$obj{'PermanentAddress'}($$rcmap{'EthernetPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
@@ -962,7 +982,9 @@ sub queryStorwize {
             #   -
             #
             elsif ($$cfg{'check'} eq 'FCPortStatistics') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 my ($node, $port) = $obj{'ElementName'} =~ /^FCPort statistics for port (\d+) on node (\d+)/;
                 my %stats = (
                     BytesTransmitted => 'trans',
@@ -1049,7 +1071,9 @@ sub queryStorwize {
             #   SpareStatus
             #
             elsif ($$cfg{'check'} eq 'IsSpare') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'SpareStatus'} != 2) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'IsSpare'}{'SpareStatus'}{$obj{'SpareStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -1065,7 +1089,9 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'MasterConsole') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'OperationalStatus'} != 2) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'MasterConsole'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -1081,7 +1107,9 @@ sub queryStorwize {
             #   Status, Sync
             #
             elsif ($$cfg{'check'} eq 'MirrorExtent') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'Status'} != 1 || $obj{'Sync'} ne 'TRUE') {
                     $$out{'retStr'} .= " VDisk:$obj{'StorageVolumeID'},Copy:$obj{'CopyID'}($$rcmap{'MirrorExtent'}{'Status'}{$obj{'Status'}},$$rcmap{'MirrorExtent'}{'Sync'}{$obj{'Sync'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -1100,7 +1128,9 @@ sub queryStorwize {
             #   NativeStatus, OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'Node') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'Node'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'Node'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -1121,7 +1151,9 @@ sub queryStorwize {
             #   Active, Status
             #
             elsif ($$cfg{'check'} eq 'QuorumDisk') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 my $_name = $obj{'ElementName'};
                 if ($_name eq '') {
                     $_name = 'Quorum_'.$obj{'QuorumIndex'};
@@ -1142,7 +1174,11 @@ sub queryStorwize {
             # Pool. In SVC terms a VDisk
             #
             # Check for:
-            #   CacheState(0='Empty',1='Not Empty'), NativeStatus (1='Online'), OperationalStatus (2='OK')
+            #   CacheState
+            #
+            # Values:
+            #   Cachestate 0='Empty', 1='Not Empty'
+            #   NativeStatus 1='Online' and OperationalStatus 2='OK'
             #
             elsif ($$cfg{'check'} eq 'StorageVolume') {
                 # set default warning at 85%, critical at 95% (set crit to 100 for warnings only)
@@ -1183,7 +1219,7 @@ sub queryStorwize {
                     $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                     $used_count_warn++;
-                    # add critical elements separately, so we can show them first
+                    # Add critical elements separately, so we can show them first
                     $perfWarnStr .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $perfWarnStr .= " used=" . convSize($obj{'UncompressedUsedCapacity'}). ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
                 } elsif ($usedpct >= $_critical) {
@@ -1198,12 +1234,6 @@ sub queryStorwize {
                     $$out{'perfStr'} .= " used=" . convSize($obj{'UncompressedUsedCapacity'}) . ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
                 }
             }
-
-            #
-            # TODO: Add Ports (network, ...)
-            #       Statistics (port statistics, pkt errors, ... )
-            #
-
             # CIM_NetworkPort is a subclass of CIM_LogicalPort
             # NetworkPort is the logical representation of network communications hardware such as a physical connector.
             # NetworkPorts are often numbered relative to either a logical module or a network element.
@@ -1215,11 +1245,6 @@ sub queryStorwize {
                 if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     $skipped_count++;
                     next;
-                }
-                if ($$cfg{'debug'} eq 1) {
-                    print("DEBUG: OperationalStatus=$obj{'OperationalStatus'} NodeName=$obj{'NodeName'} PortNumber=$obj{'PortNumber'} StatusDescriptions=$obj{'StatusDescriptions'} " .
-                        "SystemCreationClassName=$obj{'SystemCreationClassName'} Speed=" .convSpeed($obj{'Speed'}) . " FullDuplex=$obj{'FullDuplex'} MTU=$obj{'SupportedMaximumTransmissionUnit'} " .
-                        "$$rcmap{'NetworkPort'}{'LinkTechnology'}{$obj{'LinkTechnology'}}" . "\n");
                 }
                 if ($obj{'OperationalStatus'} != 2 && $obj{'OperationalStatus'} != 10) {
                     $$out{'retStr'} .= " $obj{'NodeName'}-p$obj{'PortNumber'}";
@@ -1237,11 +1262,16 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
+                if ($$cfg{'debug'} eq 1) {
+                    print("DEBUG: OperationalStatus=$obj{'OperationalStatus'} NodeName=$obj{'NodeName'} PortNumber=$obj{'PortNumber'} StatusDescriptions=$obj{'StatusDescriptions'} " .
+                        "SystemCreationClassName=$obj{'SystemCreationClassName'} Speed=" . convSpeed($obj{'Speed'}) . " FullDuplex=$obj{'FullDuplex'} MTU=$obj{'SupportedMaximumTransmissionUnit'} " .
+                        "$$rcmap{'NetworkPort'}{'LinkTechnology'}{$obj{'LinkTechnology'}}" . "\n");
+                }
             }
+        } else {
+            next;
         }
-        else { next; }
     }
-    #close( WBEMCLI );
     close( $fh );
     if (! -x $conf{'wbemcli'}) {
         print ("ERROR: wbemcli $?\n");
