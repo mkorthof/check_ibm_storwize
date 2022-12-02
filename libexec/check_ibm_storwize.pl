@@ -525,6 +525,9 @@ sub queryStorwize {
                         $inst_count_ok++;
                     }
                 } elsif ($obj{'OperationalStatus'} == 10) {
+                    if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
+                        $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                    }
                     $stopped_count++;
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}port$obj{'PortID'}_status=$obj{'OperationalStatus'};;;;";
@@ -555,9 +558,9 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-                if ($inst_count_nok > 0 && $inst_count_nok < 2) {
+                if ($inst_count_nok >= $$cfg{'warning'} && $inst_count_nok <= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-                } elsif ($inst_count_nok > 1) {
+                } elsif ($inst_count_nok >= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}_status=$obj{'OperationalStatus'};;;;";
@@ -586,9 +589,9 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-                if ($inst_count_nok >= $_warning && $inst_count_nok <= $_critical) {
+                if ($inst_count_nok >= $$cfg{'warning'} && $inst_count_nok <= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-                } elsif ($inst_count_nok >= $_critical) {
+                } elsif ($inst_count_nok >= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}_status=$obj{'OperationalStatus'};;;;";
@@ -679,23 +682,15 @@ sub queryStorwize {
             #   -
             #
             elsif ($$cfg{'check'} eq 'ArrayBasedOnDiskDrive') {
-                # set default critical/warning to 0
-                my ($_warning, $_critical) = (0, 0);
-                if (exists $$cfg{'critical'} && $$cfg{'critical'} ne '') {
-                    $_critical = $$cfg{'critical'};
-                }
-                if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
-                    $_warning = $$cfg{'warning'};
-                }
                 if (($obj{'EnclosureIDGoal'} eq '') || ($obj{'SlotIDGoal'} eq '')) {
                     print ("$$cfg{'STATUS'}{'3'}: No EnclosureIDGoal or SlotIDGoal found (Spares:$obj{'SpareProtection'})\n");
                     exit $$cfg{'RC'}{'UNKNOWN'};
                 }
-                if ($obj{'SpareProtection'} <= $_critical) {
+                if ($obj{'SpareProtection'} <= $$cfg{'critical'}) {
                     $$out{'retStr'} .= " Enc:$obj{'EnclosureIDGoal'},Slot:$obj{'SlotIDGoal'}(Spares:$obj{'SpareProtection'})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
-                } elsif ($obj{'SpareProtection'} <= $_warning && $obj{'SpareProtection'} > $_critical) {
+                } elsif ($obj{'SpareProtection'} <= $$cfg{'warning'} && $obj{'SpareProtection'} > $$cfg{'critical'}) {
                     $$out{'retStr'} .= " Enc:$obj{'EnclosureIDGoal'},Slot:$obj{'SlotIDGoal'}(Spares:$obj{'SpareProtection'})";
                     if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
                         $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
@@ -822,20 +817,20 @@ sub queryStorwize {
             # Check for:
             #   NativeStatus, OperationalStatus
             #
-            # Replaced 'UsedCapacity/TotalManagedSpace' with 'PhysicalCapacity'
+            # If available use 'PhysicalCapacity' instead of 'UsedCapacity/TotalManagedSpace'
             elsif ($$cfg{'check'} eq 'ConcreteStoragePool') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
-                # set default warning 85% and critical at 95% usage
-                my ($_warning, $_critical) = (85, 95);
-                if (defined $$cfg{'critical'} && $$cfg{'critical'} ne '') {
-                    $_critical = $$cfg{'critical'};
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
                 }
-                if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
-                    $_warning = $$cfg{'warning'};
+                my ($total, $used);
+                if ($obj{'PhysicalCapacity'} ne '' && $obj{'PhysicalFreeCapacity' ne '' }) {
+                    $used = $obj{'PhysicalCapacity'} - $obj{'PhysicalFreeCapacity'};
+                    $total = $obj{'PhysicalCapacity'}
+                } else {
+                    $used = $obj{'UsedCapacity'};
+                    $total = $obj{'TotalManagedSpace'};
                 }
-                # my $usedpct=sprintf("%.0f",($obj{'UsedCapacity'}/$obj{'TotalManagedSpace'})*100);
-                my $used = $obj{'PhysicalCapacity'} - $obj{'PhysicalFreeCapacity'};
-                my $usedpct = sprintf("%.0f",(${used}/$obj{'PhysicalCapacity'})*100);
+                my $usedpct = sprintf("%.0f",(${used}/${total})*100);
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1 ) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'ConcreteStoragePool'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'ConcreteStoragePool'}{'OperationalStatus'}{$obj{'OperationalStatus'}},Used:${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -843,9 +838,9 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-                if ($usedpct >= $_warning && $usedpct <= $_critical) {
+                if ($usedpct >= $$cfg{'warning'} && $usedpct <= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-                } elsif ($usedpct >= $_critical) {
+                } elsif ($usedpct >= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
                 if ($$cfg{'debug'} eq 1) {
@@ -1014,14 +1009,8 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'IOGroup') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) { next; }
-                # set default critical/warning to 0
-                my ($_warning, $_critical) = (0, 0);
-                if (exists $$cfg{'critical'} && $$cfg{'critical'} ne '') {
-                    $_critical = $$cfg{'critical'};
-                }
-                if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
-                    $_warning = $$cfg{'warning'};
+                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
                 }
                 my @mem_elements;
                 $inst_count--;
@@ -1032,11 +1021,11 @@ sub queryStorwize {
                     if ($obj{$mem_total} == 0) {
                         # For inactive memory metrics the value of "*TotalMemory" is zero, skip those.
                         $inst_count--;
-                    } elsif ($obj{$mem_free} <= $_critical) {
+                    } elsif ($obj{$mem_free} <= $$cfg{'critical'}) {
                         push (@mem_elements, "$mem:CRITICAL");
                         $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                         $inst_count_nok++;
-                    } elsif ($obj{$mem_free} <= $_warning && $obj{$mem_free} > $_critical) {
+                    } elsif ($obj{$mem_free} <= $$cfg{'warning'} && $obj{$mem_free} > $$cfg{'critical'}) {
                         push (@mem_elements, "$mem:WARNING");
                         if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
                             $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
@@ -1181,14 +1170,6 @@ sub queryStorwize {
             #   NativeStatus 1='Online' and OperationalStatus 2='OK'
             #
             elsif ($$cfg{'check'} eq 'StorageVolume') {
-                # set default warning at 85%, critical at 95% (set crit to 100 for warnings only)
-                my ($_warning, $_critical) = (85, 95);
-                if (defined $$cfg{'critical'} && $$cfg{'critical'} ne '') {
-                    $_critical = $$cfg{'critical'};
-                }
-                if (exists $$cfg{'warning'} && $$cfg{'warning'} ne '') {
-                    $_warning = $$cfg{'warning'};
-                }
                 # Always skip vdisk[0-9] elements because they return false positives
                 if ((($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) || ($obj{'ElementName'} =~ '^vdisk[0-9]')) {
                     $skipped_count++;
@@ -1215,21 +1196,21 @@ sub queryStorwize {
                 } else {
                     $inst_count_ok++;
                 }
-                if ($usedpct >= $_warning && $usedpct <= $_critical) {
-                    $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
+                if ($usedpct >= $$cfg{'warning'} && $usedpct <= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                    $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
                     $used_count_warn++;
                     # Add critical elements separately, so we can show them first
                     $perfWarnStr .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $perfWarnStr .= " used=" . convSize($obj{'UncompressedUsedCapacity'}). ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
-                } elsif ($usedpct >= $_critical) {
+                } elsif ($usedpct >= $$cfg{'critical'}) {
                     $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $used_count_crit++;
                     $perfCritStr .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $perfCritStr .= " used=" . convSize($obj{'UncompressedUsedCapacity'}). ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
                 }
-                if ($usedpct <= $_warning && $usedpct <= $_critical) {
+                if ($usedpct <= $$cfg{'warning'} && $usedpct <= $$cfg{'critical'}) {
                     $$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%" . ";;;;";
                     $$out{'perfStr'} .= " used=" . convSize($obj{'UncompressedUsedCapacity'}) . ";;;; total=" . convSize($obj{'ConsumableBlocks'}) . ";;;;";
                 }
