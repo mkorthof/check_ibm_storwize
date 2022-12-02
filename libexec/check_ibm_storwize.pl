@@ -847,7 +847,7 @@ sub queryStorwize {
                     print("DEBUG: $obj{'ElementName'} usedpct=${usedpct} used=${used} UsedCapacity=$obj{'UsedCapacity'}\n");
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%;;;;";
-                $$out{'perfStr'} .= " used=" . convSize(${used}) . ";;;; total=" . convSize($obj{'PhysicalCapacity'}) . ";;;;";
+                $$out{'perfStr'} .= " used=" . convSize(${used}) . ";;;; total=" . convSize($total) . ";;;;";
                 $$out{'perfStr'} .= " mdisks=$obj{'NumberOfBackendVolumes'};;;; vols=$obj{'NumberOfStorageVolumes'};;;;";
             }
             # Capabilities and managment of a DiskDrive, a subtype of MediaAccessDevice.
