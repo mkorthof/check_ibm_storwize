@@ -1,6 +1,14 @@
-# FCPort.mof
+# FCPort
 
-## OperationalStatus
+Notes about port status and mof file (Managed Object Format)
+
+## MOF
+
+- FCIOPortID "The FC IO port ID of the port."
+- PortID "Platform port ID supporting the port.
+- NodeName "Name of the node containing the p
+
+### OperationalStatus
 
 > Indicates the current status of the port.
 >
@@ -21,9 +29,9 @@ ValueMap            Values
  "8"                "Starting"
  "7"                "Non-Recoverable Error"
  "9"                "Stopping"
- "10"               "Stopped"                   (inactive)
+ "10"               "Stopped"                   (inactive; becomes active on IOPS)
  "11"               "In Service"                (configured)
- "12"               "No Contact"                (not installed)
+ "12"               "No Contact"                (not installed; no sfp)
  "13"               "Lost Communication"
  "14"               "Aborted"
  "15"               "Dormant"
@@ -34,7 +42,7 @@ ValueMap            Values
  "0x8000.."         "Vendor Reserved"
 ```
 
-## StatusDescriptions
+### StatusDescriptions
 
 > "Strings describing the various OperationalStatus array "
 > "values. For example, if "Stopping" is the value assigned "
@@ -46,6 +54,9 @@ ValueMap            Values
 StatusDescriptions will show e.g. "OK", "Unknown" or "", so not really more info than OperationalStatus.
 
 # IBM Support site
+
+<https://www.ibm.com/support/pages/fc-ports-show-inactinnveconfigured-if-system-not-use>
+
 
 Question
 Why are ports displayed as inactive? FC Ports show "inactive_configured" if system is not in use
@@ -60,6 +71,8 @@ Answer
 - From main GUI "system" all FC connected ports were active.
 
 --- 
+
+<https://www.ibm.com/support/pages/gui-shows-fc-ports-offline-information-about-port-status-lsportfc>
 
 GUI shows fc ports as offline. Information about port status in lsportfc
 
@@ -91,3 +104,8 @@ GUI shows warning when ports Offline (unused) "Inactive configured"
 
 - From Network --> Fiber Channel Connectivity FC ports show inactive_configured.
 - This is because system is not in use, as soon as IOPS start, status of the FC ports change to "active", this is how system/code is designed.
+
+---
+
+lsportfc:
+https://www.ibm.com/docs/en/flashsystem-9x00/8.2.x?topic=commands-lsportfc
