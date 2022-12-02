@@ -1,0 +1,34 @@
+ibm03.example.com:5989/root/ibm:IBMTSSVC_MasterConsole.CreationClassName="IBMTSSVC_MasterConsole",Name="IBMTSSVC:10.20.30.40"
+-InstanceID=
+-Caption=
+-Description="IBMTSSVC_MasterConsole"
+-InstallDate=
+-StatusDescriptions="OK"
+-Status=
+-HealthState=
+-CommunicationStatus=
+-DetailedStatus=
+-OperatingStatus=
+-PrimaryStatus=
+-EnabledState=5
+-OtherEnabledState=
+-RequestedState=12
+-EnabledDefault=2
+-TimeOfLastStateChange=
+-AvailableRequestedStates=
+-TransitioningToState=12
+-Roles=
+-OtherIdentifyingInfo=
+-IdentifyingDescriptions=
+-Dedicated=
+-OtherDedicatedDescriptions=
+-ResetCapability=
+-PowerManagementCapabilities=
+-CreationClassName="IBMTSSVC_MasterConsole"
+-ElementName="Proxy Server"
+-Name="IBMTSSVC:10.30.40.50"
+-NameFormat="Other"
+-OperationalStatus=2
+-PrimaryOwnerContact="IBM Corporation"
+-PrimaryOwnerName="IBM Corporation"
+
