@@ -312,28 +312,26 @@ sub cli {
                     exit 3;
                 }
             } else {
+                print ("ERROR: 'Check' missing ('-C')\n");
                 usage();
+                exit 3;
             }
         } else {
+            print ("ERROR: user/password missing\n");
             usage();
+            exit 3;
         }
         if (exists $opts{c} && $opts{c} ne '' ) {
             $$cfg{'critical'} = $opts{c};
-        } else {
-            if ($$cfg{'check'} =~ "ArrayBasedOnDiskDrive|ConcreteStoragePool|IOGroup|ProtocolController|StorageVolume") {
-                print ("missing argument \"-c crit\", using default value\n");
-                #usage();
-                #exit 3;
-            }
+        } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} ne '') {
+            $$cfg{'critical'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'};
+            print ("WARN: missing argument \"-c crit\", using default value '$$cfg{'critical'}'\n");
         }
         if (exists $opts{w} && $opts{w} ne '' ) {
             $$cfg{'warning'} = $opts{w};
-        } else {
-            if ($$cfg{'check'} =~ "ArrayBasedOnDiskDrive|ConcreteStoragePool|IOGroup|ProtocolController|StorageVolume") {
-                print ("missing argument \"-w warn\", using default value\n");
-                #usage();
-                #exit 3;
-            }
+        } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} ne '') {
+            $$cfg{'warning'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'};
+            print ("WARN: missing argument \"-w warn\", using default value '$$cfg{'warning'}'\n");
         }
         if (exists $opts{s} && $opts{s} ne '' ) {
             $$cfg{'skip'} = $opts{s};
