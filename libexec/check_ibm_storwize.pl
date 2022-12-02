@@ -2,26 +2,37 @@
 # nagios: +epn
 #
 # IBM Storwize & FlashSystem health status plugin for Nagios
-# Updated version: works with latest code, V7000 G3 model and iSCSI
-# Needs wbemcli to query the Storwize Arrays CIMOM server.
+#
+# Updated version: tested with v8.3.1, V7000 G3 model and iSCSI
+# Needs: wbemcli to query the Storwize Arrays CIMOM server
 #
 
 use warnings;
 use strict;
 use Getopt::Std;
-#use XML::LibXML;
 use Time::Local;
 
 #
 # Variables
 #
+my $version = "v20221202-test-mk";
 my %conf = (
+    namespace => '/root/ibm',
     service => 'IBMTSSVC',
     wbemcli => '/usr/bin/wbemcli',
     wbemcli_opt => '-noverify -nl',
     debug => '0',
+    test => '0',
     bytes => '0',
     skip => '',
+    DEFAULTS => {
+        ArrayBasedOnDiskDrive => { w => '0', c => '0' },    # no spare
+        ConcreteStoragePool => { w => '80', c => '90' },    # %usage (c 100 to warn only)
+        IOGroup => { w => '0', c => '0' },                  # nodes down
+        iSCSIProtocolEndpoint => { w => '1', c => '2' },    # ports down
+        ProtocolController => { w => '3',  c => '4' },      # hosts down
+        StorageVolume => { w => '85', c => '95' },          # %usage
+    },
     SNAME => {
         Array => 'Array',
         ArrayBasedOnDiskDrive => 'Array Spare Coverage',
@@ -47,7 +58,8 @@ my %conf = (
         QuorumDisk => 'Quorum Disk',
         RemoteCluster => 'Remote Cluster',
         StorageVolume => 'Storage Volume',
-        ProtocolController => 'Protocol Controller'
+        ProtocolController => 'Protocol Controller',
+        CIMOMStatisticalData => 'Test Local CIM Server'
     },
     RC => {
         OK => '0',
@@ -275,10 +287,13 @@ my %output = (
 sub cli {
     my ($cfg) = @_;
     my %opts;
-    my $optstring = "bp:C:H:P:c:dp:hp:u:w:s:";
+    my $optstring = "bp:C:H:P:Dp:c:dp:hp:u:w:s:tp:Tp:";
     getopts( "$optstring", \%opts) or usage();
-    usage()  if ($opts{h} );
-    $$cfg{'debug'} = 1  if ($opts{d} );
+    usage() if ($opts{h} );
+    $$cfg{'debug'} = 1  if ($opts{d} );     # show debug output
+    $$cfg{'debug'} = 2  if ($opts{D} );     # more verbose
+    $$cfg{'test'} = 1  if ($opts{t} );      # mock tests (txt files)
+    $$cfg{'test'} = 2  if ($opts{T} );      # use local cim server
     $$cfg{'bytes'} = 1  if ($opts{b} );
     if (exists $opts{H} && $opts{H} ne '') {
         $$cfg{'host'} = $opts{H};
@@ -287,7 +302,7 @@ sub cli {
         } else {
             $$cfg{'port'} = '5989';
         }
-        if (exists $opts{u} && $opts{u} ne '' && exists $opts{p} && $opts{p} ne '') {
+        if ((exists $$cfg{'test'} && $$cfg{'test'} == 2) || ((exists $opts{u} && $opts{u} ne '') && (exists $opts{p} && $opts{p} ne ''))) {
             $$cfg{'user'} = $opts{u};
             $$cfg{'password'} = $opts{p};
             if (exists $opts{C} && $opts{C} ne '') {
@@ -371,12 +386,30 @@ sub convSpeed {
 #
 sub queryStorwize {
     my ($cfg, $out, $rcmap) = @_;
-    # Special case: different Class name
-    if ($$cfg{'check'} eq 'NetworkPort') { $$cfg{'service'} = "CIM"; }
-    my $objectPath = "https://$$cfg{'user'}:$$cfg{'password'}\@$$cfg{'host'}:$$cfg{'port'}/root/ibm:$$cfg{'service'}_$$cfg{'check'}";
-    # FIXED: (Test) Linter warning about 'bareword' fh. We also want stderr for Exceptions (failed connection, login)
-    open( my $fh, "-|", "$$cfg{'wbemcli'} $$cfg{'wbemcli_opt'} ei \'$objectPath\' 2>&1" ) or die "Can't fork\n";
-
+    my ($objectPath, $fh, $cmd);
+    # Special case: different Class name 'CIM' for NetworkPort
+    if ($$cfg{'check'} eq 'NetworkPort') {
+        $$cfg{'service'} = "CIM";
+    }
+    $objectPath = "https://$$cfg{'user'}:$$cfg{'password'}\@$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}";
+    $cmd = "$$cfg{'wbemcli'} $$cfg{'wbemcli_opt'} ei \'$objectPath\' 2>&1";
+    # TEST mode 1: replace cmd with mock
+    if ($$cfg{'test'} == 1) {
+        print("TEST1: using mock \"../test/$$cfg{'check'}.txt\" .. \n" );
+        $cmd = "cat ../test/$$cfg{'check'}.txt";
+    }
+    # TEST mode 2: use local test server (replace objectpath)
+    if ($$cfg{'test'} == 2) {
+        $$cfg{'port'} = "5988"; 
+        $$cfg{'namespace'} = '/root/cimv2';
+        $$cfg{'service'} = "CIM";
+        $objectPath = "http://$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}";
+        print("TEST2: using local server (objectPath=$objectPath)\n");
+    }
+    if ($$cfg{'debug'} > 0) {
+        print("DEBUG: cmd=\"$cmd\" (debug=$$cfg{'debug'})\n");
+    }
+    open( $fh, "-|", $cmd ) or die "Can't fork\n";
     my %obj;
     my $obj_begin;
     my $prop_name = '';
@@ -390,14 +423,20 @@ sub queryStorwize {
     my $path_count_half = 0;
     my $quorum_active = '';
     my $stopped_count = 0;
+    my $unused_count = 0;
     my $used_count_warn = 0;
     my $used_count_crit = 0;
     my $skipped_count = 0;
     my $perfWarnStr = '';
     my $perfCritStr = '';
-    # FIXED: Linter warn about fh
-    # while( my $line = <WBEMCLI> ) {
     while( my $line = <$fh> ) {
+        if ($$cfg{'debug'} > 2) {
+            if (defined($obj_begin)) {
+                print("DEBUG: obj_begin=$obj_begin inst_count=$inst_count line: $line");
+            } else {
+                print("DEBUG: obj_begin=UNDEFINED inst_count=$inst_count line: $line");
+            }
+        }
         if (($line =~ /.*Exception/) == 1) {
             print ("ERROR: $line\n");
             exit 2;
@@ -406,22 +445,36 @@ sub queryStorwize {
             print ("ERROR: missing output\n");
             exit 2;
         }
-        # Check both CIM_* and IBMTSSVC_* Classes
-        #if (($line =~ /^$$cfg{'host'}:$$cfg{'port'}\/root\/ibm:$$cfg{'service'}_$$cfg{'check'}\.(.*)$/ ) == 1) {
-        if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}\/root\/ibm:($$cfg{'service'}_$$cfg{'check'}|(CIM|IBMTSSVC)_.*)\.(.*)$/ ) == 1) {
+        # Check both CIM_* and IBMTSSVC_* Classes, e.g. /^host:5989/root/ibm:(IBMTSSVC_Array|(CIM|IBMTSSVC)_.*)\.(.*)$/
+        #   if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}\/root\/ibm:($$cfg{'service'}_$$cfg{'check'}|(CIM|IBMTSSVC)_.*)\.(.*)$/ ) == 1) {
+        if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}\.(.*)$/ ) == 1) {
             $obj_begin = 1;
-        }
-        elsif ((($prop_name, $prop_value) = $line =~ /^-(.*)=(.*)$/ ) == 2) {
+        } elsif ((($prop_name, $prop_value) = $line =~ /^-(.*)=(.*)$/ ) == 2) {
             $prop_value =~ s/"//g;
             $obj{$prop_name} = $prop_value;
-        }
-        elsif ($line =~ /^\s*$/ && $obj_begin == 1) {
-
+        } elsif ($line =~ /^\s*$/ && $obj_begin == 1) {
             $obj_begin = 0;
             $inst_count++;
+            # Test: Use local CIMON server (e.g. OpenPegasus)
+            #
+            # Simulates Check for:
+            #   CIMOMStatisticalData
+            #
+            if ($$cfg{'check'} eq 'CIMOMStatisticalData') {
+                if ($$cfg{'debug'} eq 1) {
+                    print("DEBUG: InstanceID=$obj{'InstanceID'} OperationType=$obj{'OperationType'}\n");
+                }
+                if ($obj{'OperationType'} != 1) {
+                    $$out{'retStr'} .= " $obj{'InstanceID'}";
+                    $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
+                    $inst_count_nok++;
+                } else {
+                    $inst_count_ok++;
+                }
+            }
             # This should be the end of the paragraph/instance so we should
             # have gathered all properties at this point
-
+            #
             # Masking view of host cluster
             #
             # Check for:
