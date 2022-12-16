@@ -1291,16 +1291,10 @@ sub queryStorwize {
     }
 
     # Special case: Show stopped elements which are neither 'ok' nor 'nok'
-    my ($_stopped, $_perfstop) = ('', '');
+    my ($_stopped, $_perfstopped) = ('', '');
     if (defined $stopped_count && $stopped_count > 0) {
         $_stopped = "Stopped:${stopped_count}/";
-        $_perfstop = " stopped=${stopped_count};;;;";
-    }
-    # Special case: Show unused elements which are neither 'ok' nor 'nok' nor 'stopped'
-    my ($_unused, $_perfunused) = ('', '');
-    if (defined $unused_count && $unused_count > 0) {
-        $_unused = "Unused:${unused_count}/";
-        $_perfunused = " unused=${unused_count};;;;";
+        $_perfstopped = " Stopped=${stopped_count};;;;";
     }
     # Special case: Show skipped elements
     my $_skipped = '';
@@ -1327,7 +1321,7 @@ sub queryStorwize {
         } else {
             $$out{'retStr'} = " $$out{'retStr'}";
         }
-        $$out{'retStr'} = "NOK:$inst_count_nok/OK:$inst_count_ok/${_stopped}${_unused}${_skipped}Total:$inst_count${_cap}".$$out{'retStr'};
+        $$out{'retStr'} = "NOK:$inst_count_nok/OK:$inst_count_ok/${_stopped}${_skipped}Total:$inst_count${_cap}".$$out{'retStr'};
     }
 
     # Special case: Check if at least one QuorumDisk was in the "active='TRUE'" state and add to *end* of retStr
@@ -1353,7 +1347,7 @@ sub queryStorwize {
     if ($$out{'perfStr'} ne '') {
         $$out{'perfStr'} = "|".$$out{'perfStr'};
     } else {
-        $$out{'perfStr'} = "|nok=$inst_count_nok;;;; ok=$inst_count_ok;;;;${_perfstop}${_perfunused} total=$inst_count;;;;";
+        $$out{'perfStr'} = "|nok=$inst_count_nok;;;; ok=$inst_count_ok;;;;${_perfstopped} total=$inst_count;;;;";
     }
 }
 
