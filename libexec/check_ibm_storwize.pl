@@ -941,38 +941,48 @@ sub queryStorwize {
             # Check for:
             #   OperationalStatus
             #
+            # ElementName = WWPN
             elsif ($$cfg{'check'} eq 'FCPort') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
+                # Not OK "Active_Configured"
                 if ($obj{'OperationalStatus'} != 2) {
-                    #$$out{'retStr'} .= "($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
-                    my ($port, $status);
+                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}})) {
+                        if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
+                            $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                        }
+                    }
+                    my ($port, $desc);
                     if ( $obj{'ElementName'} ne '') {
                         $port = "$obj{'ElementName'}";
                     } elsif ($obj{'NodeName'} ne '' && $obj{'FCIOPortID'} ne '') {
-                        $port = " $obj{'NodeName'}-p$obj{'FCIOPortID'}";
+                        $port = "$obj{'NodeName'}-p$obj{'FCIOPortID'}";
                     } elsif ($obj{'PortID'} ne '') {
-                        $port = " p$obj{'PortID'}";
+                        $port = "p$obj{'PortID'}";
                     }
-                    # Get description explaining OperationalStatus, if available
-                    if ($obj{'StatusDescriptions'} ne '' && $obj{'StatusDescriptions'} ne 'OK') {
-                        $status = "$port($obj{'StatusDescriptions'})";
-                    } else {
-                        $status = "$port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                    if ("$obj{'StatusDescriptions'}" ne '') {
+                        ($desc = $obj{'StatusDescriptions'}) =~ s/^Port\s//;
+                        $desc =~ s/unconfigured inactive/unconf_inactive/;
+                        $desc =~ s/configured inactive/conf_inactive/;
                     }
-                    if ($obj{'OperationalStatus'} == 10 ) {
-                        #print("DEBUG: stopped $$out{'retRC'}\n");
-                        $$out{'retStr'} .= $status;
-                        $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
+                    # Stopped (not failed)
+                    if ($obj{'OperationalStatus'} == 10 || $obj{'StatusDescriptions'} eq 'Port unconfigured inactive') {
+                        if ($desc ne '') {
+                            $$out{'retStr'} .= " $port($desc)";
+                        } else {
+                            $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                        }
                         $stopped_count++;
+                    # Not installed (not failed)
                     } elsif ($obj{'OperationalStatus'} == 12) {
-                        #print("DEBUG: unused $$out{'retRC'}\n");
-                        $$out{'retStr'} .= $status;
-                        $unused_count++;
+                        $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                    # SFP installed, no host connected or no LUN served: "Offline"
+                    } elsif ($obj{'StatusDescriptions'} eq 'Port configured inactive') {
+                        $$out{'retStr'} .= " NOK:$port($desc)";
+                        $inst_count_nok++;
                     } else {
-                        #print("DEBUG: nok $$out{'retRC'}\n");
-                        $$out{'retStr'} .= " $port({'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                        $$out{'retStr'} .= " $$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}}";
                         if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
                             $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                         }
@@ -985,10 +995,9 @@ sub queryStorwize {
                 if ($inst_count_ok < $inst_count_half && $inst_count_half >= 1) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
-                if ($$cfg{'debug'} eq 1) {
-                    print("DEBUG: RC(last) $$out{'retRC'}\n");
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'NodeName'}-p$obj{'FCIOPortID'} OperationalStatus=$$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}}($obj{'OperationalStatus'}) " .
-                        "skip=$$cfg{'skip'} ElementName=$obj{'ElementName'} DeviceID=$obj{'DeviceID'} StatusDescriptions=$obj{'StatusDescriptions'} (ok=$inst_count_ok < half=$inst_count_half)\n");
+                        "skip=$$cfg{'skip'} ElementName=$obj{'ElementName'} DeviceID=$obj{'DeviceID'} StatusDescriptions=\"$obj{'StatusDescriptions'}\" (ok=$inst_count_ok < half=$inst_count_half)\n");
                 }
             }
             # u09422fra
