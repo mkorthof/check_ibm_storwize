@@ -36,7 +36,7 @@ OpenPegasus was the easiest to setup. Compile with `setup.sh` and `make`, then s
 
 Now point the script to localhost in test mode 2:
 
- `./check_ibm_storwize.pl -H localhost -P 5988 -C CIMOMStatisticalData -T`
+ `./check_ibm_storwize.pl -H localhost -u none -p none -C CIMOMStatisticalData -T`
 
 ## Manually running wbemcli 
 

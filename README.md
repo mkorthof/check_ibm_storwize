@@ -27,11 +27,11 @@ Original script was made for "Shinken", a Nagios rewrite. This version is a fork
 - Nagios, Icinga or other compatible monitoring system
 - Perl 5, if it's not already installed  (`apt` or `yum install perl`)
 - open CIM port (TCP/5989) and a WBEM/CIM client (`apt` or `yum install sblim-wbemcli`)
-- a ("nagios") account to login to storage device (create in GUI or `mkuser` in CLI)
+- a "monitor" user account to log in to storage device (create in GUI or `mkuser` in CLI)
 
 ### Script
 
-The main updated Perl script is location in "libexec". Place it on your Nagios server for example.
+The main updated Perl script is located in "libexec" dir. Place it on your Nagios server for example.
 
 If you only want the script, download [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl)
 
@@ -89,7 +89,9 @@ Check thresholds:
 
 Numbers in **bold** can be changed with `-c` and `-w`. If percentage `-c 100` is set, the plugin will warn only.
 
-NOTE: these checks will WARN if more than half of total items are down: BackendVolume, EtherNetPort and FCPort.
+These checks will WARN if more than **half** of total items are down:
+
+- BackendVolume, EthernetPort, FCPort
 
 ## Nagios templates
 

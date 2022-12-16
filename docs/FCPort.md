@@ -12,9 +12,9 @@ Notes about port status and mof file (Managed Object Format)
 
 > Indicates the current status of the port.
 >
-> Possible values are 2 ("OK") if the port is "active",
-> 6 ("Error") if the port is in "failure",
-> 10 ("Stopped") if the port is "inactive" or
+> Possible values are 2 ("OK") if the port is "active",  
+> 6 ("Error") if the port is in "failure",  
+> 10 ("Stopped") if the port is "inactive" or  
 > 12 ("No contact") if the port is "not installed".
 
 ```
@@ -25,13 +25,13 @@ ValueMap            Values
  "3"                "Degraded"
  "4"                "Stressed"
  "5"                "Predictive Failure"
- "6"                "Error"                     (failure)
+ "6"                "Error"
  "8"                "Starting"
  "7"                "Non-Recoverable Error"
  "9"                "Stopping"
- "10"               "Stopped"                   (inactive; becomes active on IOPS)
- "11"               "In Service"                (configured)
- "12"               "No Contact"                (not installed; no sfp)
+ "10"               "Stopped"                  (Port unconfigured inactive)
+ "11"               "In Service"
+ "12"               "No Contact"
  "13"               "Lost Communication"
  "14"               "Aborted"
  "15"               "Dormant"
