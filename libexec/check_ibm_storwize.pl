@@ -15,7 +15,7 @@ use Time::Local;
 #
 # Variables
 #
-my $version = "v20221202-test-mk";
+my $version = "v20221216-test2-mk";
 my %conf = (
     namespace => '/root/ibm',
     service => 'IBMTSSVC',
@@ -27,11 +27,11 @@ my %conf = (
     skip => '',
     DEFAULTS => {
         ArrayBasedOnDiskDrive => { w => '0', c => '0' },    # no spare
-        ConcreteStoragePool => { w => '80', c => '90' },    # %usage (c 100 to warn only)
+        ConcreteStoragePool => { w => '80', c => '90' },    # % usage (set -c 100 to warn only)
         IOGroup => { w => '0', c => '0' },                  # nodes down
         iSCSIProtocolEndpoint => { w => '1', c => '2' },    # ports down
-        ProtocolController => { w => '3',  c => '4' },      # hosts down
-        StorageVolume => { w => '85', c => '95' },          # %usage
+        ProtocolController => {w => '3', c => '4' },        # hosts down
+        StorageVolume => { w => '85', c => '95' },          # % usage
     },
     SNAME => {
         Array => 'Array',
@@ -428,7 +428,6 @@ sub queryStorwize {
     my $path_count_half = 0;
     my $quorum_active = '';
     my $stopped_count = 0;
-    my $unused_count = 0;
     my $used_count_warn = 0;
     my $used_count_crit = 0;
     my $skipped_count = 0;
@@ -501,11 +500,11 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'HostCluster') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     $skipped_count++;
                     next;
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} OperationalStatus=$$rcmap{'HostCluster'}{'OperationalStatus'}{$obj{'OperationalStatus'}} " .
                         "skip=$$cfg{'skip'} PortCount=$obj{'PortCount'} MappingCount=$obj{'MappingCount'}\n");
                 }
@@ -527,12 +526,12 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'IPProtocolEndpoint') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     $skipped_count++;
                     next;
                 }
                 my $name = join(':', (split ':', "$obj{'Name'}")[-3..-1]);
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} $obj{'Name'}_port$obj{'PortID'} name=$name OperationalStatus=$$rcmap{'IPProtocolEndpoint'}{'OperationalStatus'}{$obj{'OperationalStatus'}} ");
                     print("PortID=$obj{'PortID'} IP4vAddress=$obj{'IPv4Address'} Failover=$obj{'Failover'} IP=$obj{'IPv4Address'} Speed=$obj{'Speed'} State=$obj{'State'}\n");
                 }
@@ -544,10 +543,8 @@ sub queryStorwize {
                     } else {
                         $inst_count_ok++;
                     }
+                # Stopped
                 } elsif ($obj{'OperationalStatus'} == 10) {
-                    if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
-                        $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
-                    }
                     $stopped_count++;
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}port$obj{'PortID'}_status=$obj{'OperationalStatus'};;;;";
@@ -564,15 +561,19 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'iSCSIProtocolEndpoint') {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                    next;
+                }
                 my $_element = (split '\.', "$obj{'ElementName'}")[-1];
                 my $_name = (split ',', (split '\.', "$obj{'Name'}")[-1])[-1];
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} _element=$_element Name=$obj{'Name'} _name=$_name OperationalStatus=$$rcmap{'iSCSIProtocolEndpoint'}{'OperationalStatus'}{$obj{'OperationalStatus'}}\n");
                     print("\n\nDEBUG: inst_count=$inst_count\n\n");
                 }
                 if ($obj{'OperationalStatus'} != 2 && $obj{'OperationalStatus'} != 10) {
                     $$out{'retStr'} .= " ${_element},${_name}($$rcmap{'iSCSIProtocolEndpoint'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     $inst_count_nok++;
+                # Stopped
                 } elsif ($obj{'OperationalStatus'} == 10) {
                     $stopped_count++;
                 } else {
@@ -596,10 +597,10 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'ProtocolController') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} OperationalStatus=$$rcmap{'ProtocolController'}{'OperationalStatus'}{$obj{'OperationalStatus'}} ");
                     print("Name=$obj{'Name'} HostClusterId=$obj{'HostClusterId'} HostClusterName=$obj{'HostClusterName'} DeviceID=$obj{'DeviceID'}\n");
                 }
@@ -639,10 +640,10 @@ sub queryStorwize {
             #   PartnershipStatus
             #
             if ($$cfg{'check'} eq 'RemoteCluster') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} skip=$$cfg{'skip'} ");
                     print("Name=$obj{'Name'} PartnershipStatus=$obj{'PartnershipStatus'} IP=$obj{'IP'} PartnershipBandwidth=$obj{'PartnershipBandwidth'}\n");
                 }
@@ -672,10 +673,10 @@ sub queryStorwize {
             #
             # CRITICAL: (1)offline, (2)degraded | WARN: (0)unknown (3)sync, (4)init
             if ($$cfg{'check'} eq 'Array') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} NativeStatus=$obj{'NativeStatus'} OperationalStatus=$obj{'OperationalStatus'} RaidStatus=$obj{'RaidStatus'}\n");
                 }
                 if ($obj{'NativeStatus'} != 1 || $obj{'OperationalStatus'} != 2 || $obj{'RaidStatus'} == 1 || $obj{'RaidStatus'} == 2) {
@@ -726,7 +727,7 @@ sub queryStorwize {
             #   OperationalStatus
             #
             if ($$cfg{'check'} eq 'BackendController') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'OperationalStatus'} != 2) {
@@ -809,7 +810,7 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'Cluster') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'OperationalStatus'} != 2) {
@@ -839,7 +840,7 @@ sub queryStorwize {
             #
             # If available use 'PhysicalCapacity' instead of 'UsedCapacity/TotalManagedSpace'
             elsif ($$cfg{'check'} eq 'ConcreteStoragePool') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 my ($total, $used);
@@ -863,7 +864,7 @@ sub queryStorwize {
                 } elsif ($usedpct >= $$cfg{'critical'}) {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} usedpct=${usedpct} used=${used} UsedCapacity=$obj{'UsedCapacity'}\n");
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%;;;;";
@@ -876,14 +877,14 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'DiskDrive') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'Name'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'Name'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if (($obj{'OperationalStatus'} != 32768) && ($obj{'OperationalStatus'} != 2)) {
                     $$out{'retStr'} .= " $obj{'Name'},Enc:$obj{'EnclosureID'},Slot:$obj{'SlotID'}($$rcmap{'DiskDrive'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
-                    if ($$cfg{'debug'} eq 1) {
+                    if ($$cfg{'debug'} > 0) {
                         print ("DEBUG: OperationalStatus line=$obj{'OperationalStatus'}\n");
                     }
                 } else {
@@ -896,7 +897,7 @@ sub queryStorwize {
             #   EnclosureStatus, OnlineCanisters, OnlinePSUs
             #
             elsif ($$cfg{'check'} eq 'Enclosure') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'EnclosureStatus'} != 0 || $obj{'OnlineCanisters'} < $obj{'TotalCanisters'} || $obj{'OnlinePSUs'} < $obj{'TotalPSUs'}) {
@@ -914,7 +915,7 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'EthernetPort') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'OperationalStatus'} != 2 && $obj{'OperationalStatus'} != 11) {
@@ -997,7 +998,7 @@ sub queryStorwize {
             #   -
             #
             elsif ($$cfg{'check'} eq 'FCPortStatistics') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 my ($node, $port) = $obj{'ElementName'} =~ /^FCPort statistics for port (\d+) on node (\d+)/;
@@ -1029,7 +1030,7 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'IOGroup') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 my @mem_elements;
@@ -1056,7 +1057,7 @@ sub queryStorwize {
                         $inst_count_ok++;
                     }
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print ("DEBUG: retRC= $$out{'retRC'}\n");
                 }
                 if ($$out{'retRC'} != 0) {
@@ -1080,7 +1081,7 @@ sub queryStorwize {
             #   SpareStatus
             #
             elsif ($$cfg{'check'} eq 'IsSpare') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'SpareStatus'} != 2) {
@@ -1098,7 +1099,7 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'MasterConsole') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'OperationalStatus'} != 2) {
@@ -1116,7 +1117,7 @@ sub queryStorwize {
             #   Status, Sync
             #
             elsif ($$cfg{'check'} eq 'MirrorExtent') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'Status'} != 1 || $obj{'Sync'} ne 'TRUE') {
@@ -1137,7 +1138,7 @@ sub queryStorwize {
             #   NativeStatus, OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'Node') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1) {
@@ -1160,7 +1161,7 @@ sub queryStorwize {
             #   Active, Status
             #
             elsif ($$cfg{'check'} eq 'QuorumDisk') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
                 my $_name = $obj{'ElementName'};
@@ -1191,12 +1192,12 @@ sub queryStorwize {
             #
             elsif ($$cfg{'check'} eq 'StorageVolume') {
                 # Always skip vdisk[0-9] elements because they return false positives
-                if ((($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) || ($obj{'ElementName'} =~ '^vdisk[0-9]')) {
+                if ((($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) || ($obj{'ElementName'} =~ '^vdisk[0-9]')) {
                     $skipped_count++;
                     next;
                 }
                 my $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: $obj{'ElementName'} CacheState=$obj{'CacheState'} OperationalStatus=$obj{'OperationalStatus'} NativeStatus=$obj{'NativeStatus'}" .
                         " UncompressedUsedCapacity=" . convSize($obj{'UncompressedUsedCapacity'}) .
                         " ConsumableBlocks=" . convSize($obj{'ConsumableBlocks'}) . " usedpct=${usedpct}%" . "\n")
@@ -1243,7 +1244,7 @@ sub queryStorwize {
             #   OperationalStatus
             #
             elsif ($$cfg{'check'} eq 'NetworkPort') {
-                if (($$cfg{'skip'} ne '' ) && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
+                if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     $skipped_count++;
                     next;
                 }
@@ -1258,12 +1259,13 @@ sub queryStorwize {
                         $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                     }
                     $inst_count_nok++;
+                # Stopped
                 } elsif ($obj{'OperationalStatus'} == 10) {
                     $stopped_count++;
                 } else {
                     $inst_count_ok++;
                 }
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: OperationalStatus=$obj{'OperationalStatus'} NodeName=$obj{'NodeName'} PortNumber=$obj{'PortNumber'} StatusDescriptions=$obj{'StatusDescriptions'} " .
                         "SystemCreationClassName=$obj{'SystemCreationClassName'} Speed=" . convSpeed($obj{'Speed'}) . " FullDuplex=$obj{'FullDuplex'} MTU=$obj{'SupportedMaximumTransmissionUnit'} " .
                         "$$rcmap{'NetworkPort'}{'LinkTechnology'}{$obj{'LinkTechnology'}}" . "\n");
@@ -1367,7 +1369,7 @@ Flags:
                 DiskDrive, Enclosure, EthernetPort, FCPort, IOGroup*, IsSpare, MasterConsole,
                 MirrorExtent, Node, QuorumDisk, StorageVolume**
                 BackendController, BackendTargetSCSIProtocolEndpoint, FCPortStatistics
-                ProtocolEndpoint, iSCSIProtocolEndpoint*, ProtocolController*, RemoteCluster,
+                IPProtocolEndpoint, iSCSIProtocolEndpoint*, ProtocolController*, RemoteCluster,
                 HostCluster
 
     -h          Print this help message
