@@ -9,7 +9,7 @@ Array ArrayBasedOnDiskDrive BackendVolume Cluster ConcreteStoragePool
 DiskDrive Enclosure EthernetPort FCPort IOGroup IsSpare MasterConsole
 MirrorExtent Node QuorumDisk StorageVolume
 BackendController BackendTargetSCSIProtocolEndpoint FCPortStatistics
-ProtocolEndpoint iSCSIProtocolEndpoint ProtocolController RemoteCluster
+IPProtocolEndpoint iSCSIProtocolEndpoint ProtocolController RemoteCluster
 HostCluster
 "
 
