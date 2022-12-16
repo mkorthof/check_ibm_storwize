@@ -59,7 +59,8 @@ my %conf = (
         RemoteCluster => 'Remote Cluster',
         StorageVolume => 'Storage Volume',
         ProtocolController => 'Protocol Controller',
-        CIMOMStatisticalData => 'Test Local CIM Server'
+        CIMOMStatisticalData => 'Test Local CIM Server',
+        CIMXMLCommunicationMechanism => 'Test Local CIM Server'
     },
     RC => {
         OK => '0',
@@ -166,7 +167,8 @@ my %rcmap = (
         }
     },
     FCPort => {
-        OperationalStatus => $rcmap_default{'OperationalStatus'}
+        OperationalStatus => $rcmap_default{'OperationalStatus'},
+        TriggerAlert => [ 12, "Port configured inactive" ],
     },
     HostCluster => {
         OperationalStatus => $rcmap_default{'OperationalStatus'}
@@ -304,7 +306,7 @@ sub cli {
         } else {
             $$cfg{'port'} = '5989';
         }
-        if ((exists $$cfg{'test'} && $$cfg{'test'} == 2) || ((exists $opts{u} && $opts{u} ne '') && (exists $opts{p} && $opts{p} ne ''))) {
+        if ((exists $opts{u} && $opts{u} ne '') && (exists $opts{p} && $opts{p} ne '')) {
             $$cfg{'user'} = $opts{u};
             $$cfg{'password'} = $opts{p};
             if (exists $opts{C} && $opts{C} ne '') {
@@ -395,16 +397,19 @@ sub queryStorwize {
     $cmd = "$$cfg{'wbemcli'} $$cfg{'wbemcli_opt'} ei \'$objectPath\' 2>&1";
     # TEST mode 1: replace cmd with mock
     if ($$cfg{'test'} == 1) {
-        print("TEST1: using mock \"../test/$$cfg{'check'}.txt\" .. \n" );
         $cmd = "cat ../test/$$cfg{'check'}.txt";
+        print("TEST1: using mock \"../test/$$cfg{'check'}.txt\" .. \n" );
     }
     # TEST mode 2: use local test server (replace objectpath)
     if ($$cfg{'test'} == 2) {
-        $$cfg{'port'} = "5988";
-        $$cfg{'namespace'} = '/root/cimv2';
-        $$cfg{'service'} = "CIM";
-        $objectPath = "http://$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}";
-        print("TEST2: using local server (objectPath=$objectPath)\n");
+        #$$cfg{'port'} = "5988"; # non-ssl port
+        #$$cfg{'namespace'} = '/root/cimv2';
+        $$cfg{'namespace'} = '/root/PG_InterOp';
+        #$$cfg{'service'} = "CIM";
+        $$cfg{'service'} = "PG";
+        $objectPath = "https://$$cfg{'user'}:$$cfg{'password'}\@$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}";
+        $cmd = "$$cfg{'wbemcli'} $$cfg{'wbemcli_opt'} ei \'$objectPath\' 2>&1";
+        print("TEST2: changed objectpath (namespace=$$cfg{'namespace'} service=$$cfg{'service'})\n");
     }
     if ($$cfg{'debug'} > 0) {
         print("DEBUG: cmd=\"$cmd\" (debug=$$cfg{'debug'})\n");
@@ -455,16 +460,31 @@ sub queryStorwize {
         } elsif ($line =~ /^\s*$/ && $obj_begin == 1) {
             $obj_begin = 0;
             $inst_count++;
-            # Test: Use local CIMON server (e.g. OpenPegasus)
+            # Test: Use local CIMON server
             #
-            # Simulates Check for:
-            #   CIMOMStatisticalData
+            # OpenPegasus with sample repositories.
+            #
+            # Simulated Checks:
+            #   CIM_CIMOMStatisticalData
+            #   PG_CIMXMLCommunicationMechanism
             #
             if ($$cfg{'check'} eq 'CIMOMStatisticalData') {
-                if ($$cfg{'debug'} eq 1) {
+                if ($$cfg{'debug'} > 0) {
                     print("DEBUG: InstanceID=$obj{'InstanceID'} OperationType=$obj{'OperationType'}\n");
                 }
                 if ($obj{'OperationType'} != 1) {
+                    $$out{'retStr'} .= " $obj{'InstanceID'}";
+                    $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
+                    $inst_count_nok++;
+                } else {
+                    $inst_count_ok++;
+                }
+            }
+            if ($$cfg{'check'} eq 'CIMXMLCommunicationMechanism') {
+                if ($$cfg{'debug'} > 0) {
+                    print("DEBUG: ElementName=$obj{'ElementName'} IPAddress=$obj{'IPAddress'}\n");
+                }
+                if ($obj{'OperationalStatus'} != 2) {
                     $$out{'retStr'} .= " $obj{'InstanceID'}";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                     $inst_count_nok++;
