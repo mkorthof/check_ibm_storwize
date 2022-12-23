@@ -15,7 +15,7 @@ use Time::Local;
 #
 # Variables
 #
-my $version = "v20221216-test2-mk";
+my $version = "v20221223-mk";
 my %conf = (
     namespace => '/root/ibm',
     service => 'IBMTSSVC',
@@ -27,7 +27,7 @@ my %conf = (
     skip => '',
     DEFAULTS => {
         ArrayBasedOnDiskDrive => { w => '0', c => '0' },    # no spare
-        ConcreteStoragePool => { w => '80', c => '90' },    # % usage (set -c 100 to warn only)
+        ConcreteStoragePool => { w => '80', c => '90' },    # % usage (set c 100 to warn only)
         IOGroup => { w => '0', c => '0' },                  # nodes down
         iSCSIProtocolEndpoint => { w => '1', c => '2' },    # ports down
         ProtocolController => {w => '3', c => '4' },        # hosts down
@@ -979,7 +979,7 @@ sub queryStorwize {
                         $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                     # SFP installed, no host connected or no LUN served: "Offline"
                     } elsif ($obj{'StatusDescriptions'} eq 'Port configured inactive') {
-                        $$out{'retStr'} .= " NOK:$port($desc)";
+                        $$out{'retStr'} .= " $port(nok:$desc)";
                         $inst_count_nok++;
                     } else {
                         $$out{'retStr'} .= " $$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}}";
