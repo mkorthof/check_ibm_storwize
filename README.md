@@ -105,4 +105,4 @@ All nagios config file examples are now in "[etc](etc/objects)" dir. Use as you 
 
 ## More information
 
-See: [docs/README.md](docs/README.md])
+See: [docs/README.md](docs/README.md)
