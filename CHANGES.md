@@ -1,23 +1,27 @@
 # Changes
 
+## 2022-12-16
+
+- added: TriggerAlert setting for FCPort (rcmap)
+
 ## 2022-12-02
 
 - changed: moved nagios templates to "/etc"
 
 ## 2022-12-01
 
-- fixed: "half count" of ports/hosts, would always trigger on first interation (0 < 1)
+- fixed: "half count" of ports/hosts, would always trigger on first interation (`0 < 1`)
 
 ## 2022-11-26
 
 - added: tests
-    - [test](/test) dir with mock txt files and `checks.sh` to test all Checks
+    - [test](/test) dir with mock txt files and `test_checks.sh` to test all Checks
     - flags for mocks and local cim server (see [docs/Development.md](docs/Development.md))
 - changed: FCPort
-    - warn on status Stopped `OperationStatus=10` ([#1](https://github.com/mkorthof/check_ibm_storwize/issues/1))
-    - show "Unused" (status 12) ports in ouput if, no alert
-    - outputs `StatusDescriptions` if set 
-    - port name uses node-portid if set
+    - show status "Stopped" (`OperationStatus=10`), do not alert ([#1](https://github.com/mkorthof/check_ibm_storwize/issues/1))
+    - show "Not installed" (status 12), do no alert
+    - show "Configured inactive" and alert (uses `StatusDescriptions` if set)
+    - name uses node-portid if elementname unset
 - changed: warning and critical thresholds 
     - added default vars
     - separated between percentage and failed items (see `-h`)
