@@ -45,7 +45,7 @@ If you only want the script, download [libexec/check_ibm_storwize.pl](/libexec/c
 
 ```
 
-IBM Storwize & FlashSystem health status plugin for Nagios
+IBM Storwize & FlashSystem health status plugin for Nagios (v20221223-mk)
 Needs 'wbemcli' to query the Storwize Arrays CIMOM server
 
 Usage: check_ibm_storwize.pl [-h] -H host [-P port] -u user -p password -C check [-c crit] [-w warn]
@@ -58,7 +58,7 @@ Flags:
                 DiskDrive, Enclosure, EthernetPort, FCPort, IOGroup*, IsSpare, MasterConsole,
                 MirrorExtent, Node, QuorumDisk, StorageVolume**
                 BackendController, BackendTargetSCSIProtocolEndpoint, FCPortStatistics
-                ProtocolEndpoint, iSCSIProtocolEndpoint*, ProtocolController*, RemoteCluster,
+                IPProtocolEndpoint, iSCSIProtocolEndpoint*, ProtocolController*, RemoteCluster,
                 HostCluster
 
     -h          Print this help message
