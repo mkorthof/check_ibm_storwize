@@ -2,8 +2,6 @@
 
 This script is based on different previous versions which have been worked on by a different couple people over the years. It got updated serveral times, adding e.g. new checks and other features.
 
----
-
 ## Shinken version (2015)
 
 Called "pack-storwize" by [Forlot Romain](https://github.com/claneys)
@@ -54,5 +52,3 @@ As far is I know, this is the original first version
 
 - [https://www.bityard.org/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update](https://www.bityard.org/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update)
 - [https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize](https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize)
-
----
