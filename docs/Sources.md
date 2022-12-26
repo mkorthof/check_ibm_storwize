@@ -1,6 +1,6 @@
 # Sources
 
-This script is based on different previous versions which have been worked on by a different couple people over the years. It got updated serveral times, adding e.g. new checks and other features.
+This script is based on different previous versions which have been worked on by a different couple people over the years. It got updated several times, adding e.g. new checks and other features.
 
 ## Shinken version (2015)
 
