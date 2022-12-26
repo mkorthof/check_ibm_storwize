@@ -5,8 +5,8 @@ Notes about port status and mof file (Managed Object Format)
 ## MOF
 
 - FCIOPortID "The FC IO port ID of the port."
-- PortID "Platform port ID supporting the port.
-- NodeName "Name of the node containing the p
+- PortID "Platform port ID supporting the port."
+- NodeName "Name of the node containing the port."
 
 ### OperationalStatus
 
