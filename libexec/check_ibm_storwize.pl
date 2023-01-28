@@ -329,13 +329,13 @@ sub cli {
             $$cfg{'critical'} = $opts{c};
         } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} ne '') {
             $$cfg{'critical'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'};
-            print ("WARN: missing argument \"-c crit\", using default value '$$cfg{'critical'}'\n");
+            print ("INFO: missing argument \"-c crit\", using default value '$$cfg{'critical'}'\n");
         }
         if (exists $opts{w} && $opts{w} ne '' ) {
             $$cfg{'warning'} = $opts{w};
         } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} ne '') {
             $$cfg{'warning'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'};
-            print ("WARN: missing argument \"-w warn\", using default value '$$cfg{'warning'}'\n");
+            print ("INFO: missing argument \"-w warn\", using default value '$$cfg{'warning'}'\n");
         }
         if (exists $opts{s} && $opts{s} ne '' ) {
             $$cfg{'skip'} = $opts{s};
