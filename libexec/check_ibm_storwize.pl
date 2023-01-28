@@ -402,8 +402,20 @@ sub queryStorwize {
     $cmd = "$$cfg{'wbemcli'} $$cfg{'wbemcli_opt'} ei \'$objectPath\' 2>&1";
     # TEST mode 1: replace cmd with mock
     if ($$cfg{'test'} == 1) {
-        $cmd = "cat ../test/$$cfg{'check'}.txt";
-        print("TEST1: using mock \"../test/$$cfg{'check'}.txt\" .. \n" );
+        my $testpath = '';
+        foreach my $t ( 'test', '../test', ) {
+            if (-f "$t/$$cfg{'check'}.txt") {
+                $testpath="$t/$$cfg{'check'}.txt";
+                last;
+            }
+        }
+        if ($testpath ne '') {
+            $cmd = "cat $testpath";
+            print("TEST1: using mock \"$testpath\" .. \n" );
+        } else {
+            print("TEST1: can't find \"$$cfg{'check'}.txt\", exiting .. \n" );
+            exit(1);
+        }
     }
     # TEST mode 2: use local test server (replace objectpath)
     if ($$cfg{'test'} == 2) {
