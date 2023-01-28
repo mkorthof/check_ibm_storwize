@@ -15,7 +15,7 @@ use Time::Local;
 #
 # Variables
 #
-my $version = "v20221223-mk";
+my $version = "v20230128-mk";
 my %conf = (
     namespace => '/root/ibm',
     service => 'IBMTSSVC',
