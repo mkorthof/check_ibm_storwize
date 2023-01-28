@@ -354,6 +354,7 @@ sub cli {
 # Returns: size
 sub convSize {
    my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
+   $s = 0 if (!defined($s));
    if ( $$cfg{'bytes'} ne 1 ) {
         my $size = 0;
         $size = $s if ($s =~ /^\d+$/);
@@ -372,6 +373,7 @@ sub convSize {
 # Returns: speed
 sub convSpeed {
     my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
+    $s = 0 if (!defined($s));
     if ( $$cfg{'bytes'} ne 1 ) {
         my $speed = 0;
         $speed = $s if ($s =~ /^\d+$/);
@@ -453,13 +455,12 @@ sub queryStorwize {
             exit 2;
         }
         # Check both CIM_* and IBMTSSVC_* Classes, e.g. /^host:5989/root/ibm:(IBMTSSVC_Array|(CIM|IBMTSSVC)_.*)\.(.*)$/
-        #   if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}\/root\/ibm:($$cfg{'service'}_$$cfg{'check'}|(CIM|IBMTSSVC)_.*)\.(.*)$/ ) == 1) {
         if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}\.(.*)$/ ) == 1) {
             $obj_begin = 1;
         } elsif ((($prop_name, $prop_value) = $line =~ /^-(.*)=(.*)$/ ) == 2) {
             $prop_value =~ s/"//g;
             $obj{$prop_name} = $prop_value;
-        } elsif ($line =~ /^\s*$/ && $obj_begin == 1) {
+        } elsif ($line =~ /^\s*$/ && (defined($obj_begin) && $obj_begin == 1)) {
             $obj_begin = 0;
             $inst_count++;
             # Test: Use local CIMON server
@@ -846,15 +847,17 @@ sub queryStorwize {
                 if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                my ($total, $used);
-                if ($obj{'PhysicalCapacity'} ne '' && $obj{'PhysicalFreeCapacity' ne '' }) {
+                my ($total, $used, $usedpct) = (0, 0, 0);
+                if ( (defined($obj{'PhysicalCapacity'}) && defined($obj{'PhysicalFreeCapacity'})) && ($obj{'PhysicalCapacity'} ne '' && $obj{'PhysicalFreeCapacity'} ne '') ) {
                     $used = $obj{'PhysicalCapacity'} - $obj{'PhysicalFreeCapacity'};
                     $total = $obj{'PhysicalCapacity'}
                 } else {
                     $used = $obj{'UsedCapacity'};
                     $total = $obj{'TotalManagedSpace'};
                 }
-                my $usedpct = sprintf("%.0f",(${used}/${total})*100);
+                if (($used != 0 && $total != 0)) {
+                    $usedpct = sprintf("%.0f",(${used}/${total})*100);
+                }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1 ) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'ConcreteStoragePool'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'ConcreteStoragePool'}{'OperationalStatus'}{$obj{'OperationalStatus'}},Used:${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -1211,11 +1214,14 @@ sub queryStorwize {
                     $skipped_count++;
                     next;
                 }
-                my $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
-                if ($$cfg{'debug'} > 0) {
-                    print("DEBUG: $obj{'ElementName'} CacheState=$obj{'CacheState'} OperationalStatus=$obj{'OperationalStatus'} NativeStatus=$obj{'NativeStatus'}" .
-                        " UncompressedUsedCapacity=" . convSize($obj{'UncompressedUsedCapacity'}) .
-                        " ConsumableBlocks=" . convSize($obj{'ConsumableBlocks'}) . " usedpct=${usedpct}%" . "\n")
+                my $usedpct = 0;
+                if (defined($obj{'UncompressedUsedCapacity'}) && defined($obj{'ConsumableBlocks'})) {
+                    $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
+                    if ($$cfg{'debug'} > 0) {
+                        print("DEBUG: $obj{'ElementName'} CacheState=$obj{'CacheState'} OperationalStatus=$obj{'OperationalStatus'} NativeStatus=$obj{'NativeStatus'}" .
+                            " UncompressedUsedCapacity=" . convSize($obj{'UncompressedUsedCapacity'}) .
+                            " ConsumableBlocks=" . convSize($obj{'ConsumableBlocks'}) . " usedpct=${usedpct}%" . "\n")
+                    }
                 }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'StorageVolume'}{'CacheState'}{$obj{'CacheState'}}," . 
