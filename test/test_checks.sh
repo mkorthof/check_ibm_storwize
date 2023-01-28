@@ -2,6 +2,9 @@
 
 # Test all Checks
 
+# Example:
+#   check_ibm_storwize.pl -H ibm03.example.com -u none -p none -t -C Array
+
 SCRIPT="../libexec/check_ibm_storwize.pl"
 ARGS="-H ibm03.example.com -u none -p none"
 CHECKS="
@@ -13,6 +16,11 @@ IPProtocolEndpoint iSCSIProtocolEndpoint ProtocolController RemoteCluster
 HostCluster
 "
 
+if [ ! -x "$SCRIPT" ]; then
+  echo "ERROR: cannot run $SCRIPT"
+  exit 1
+fi
+
 i=0
 ecnt=0
 printf "[TEST_START] %s pid=%s\n\n" "$(date +%F\ %T)" "$$"
@@ -23,7 +31,7 @@ for c in $CHECKS; do
     if [ "${rc:-'-1'}" -gt 2 ]; then
       C="$C $c"
       ecnt=$((ecnt+1))
-      printf "[TEST] FAIL: check=%s (rc=%s ecnt=%s)\n" "$c" "$rc" "$ecnt"
+      printf "FAIL: check=%s (rc=%s ecnt=%s)\n" "$c" "$rc" "$ecnt"
     fi
   }
   echo
@@ -38,3 +46,4 @@ if [ "${ecnt:-0}" -gt 0 ]; then
 else
   printf "[TEST_RESULT] All OK. Total: %s\n" "$i"
 fi
+echo
