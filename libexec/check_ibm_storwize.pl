@@ -982,26 +982,37 @@ sub queryStorwize {
                     } elsif ($obj{'PortID'} ne '') {
                         $port = "p$obj{'PortID'}";
                     }
+                    # Trim description text
                     if ("$obj{'StatusDescriptions'}" ne '') {
                         ($desc = $obj{'StatusDescriptions'}) =~ s/^Port\s//;
                         $desc =~ s/unconfigured inactive/unconf_inactive/;
                         $desc =~ s/configured inactive/conf_inactive/;
                     }
-                    # Stopped (not failed)
-                    if ($obj{'OperationalStatus'} == 10 || $obj{'StatusDescriptions'} eq 'Port unconfigured inactive') {
-                        if ($desc ne '') {
+                    # No contact (WARN)
+                    if ($obj{'OperationalStatus'} == 12) {
+                        if ($desc ne '' ) {
                             $$out{'retStr'} .= " $port($desc)";
                         } else {
                             $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                         }
-                        $stopped_count++;
                     # Not installed (not failed)
                     } elsif ($obj{'OperationalStatus'} == 12) {
                         $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
-                    # SFP installed, no host connected or no LUN served: "Offline"
+                    # Not in use (inactive)
+                    } elsif ($obj{'StatusDescriptions'} eq 'Port unconfigured inactive') {
+                        $$out{'retStr'} .= " $port($desc)";
+                    # SFP installed, no host connected or no LUN served: "Offline" (WARN)
                     } elsif ($obj{'StatusDescriptions'} eq 'Port configured inactive') {
                         $$out{'retStr'} .= " $port(nok:$desc)";
                         $inst_count_nok++;
+                    # Stopped
+                    } elsif ($obj{'OperationalStatus'} == 10) {
+                        if ($desc ne '') {
+                            $$out{'retStr'} .= " $port(stopped:$desc)";
+                        } else {
+                            $$out{'retStr'} .= " $port(stopped:$$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                        }
+                        $stopped_count++;
                     } else {
                         $$out{'retStr'} .= " $$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}}";
                         if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
