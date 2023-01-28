@@ -168,7 +168,10 @@ my %rcmap = (
     },
     FCPort => {
         OperationalStatus => $rcmap_default{'OperationalStatus'},
-        TriggerAlert => [ 12, "Port configured inactive" ],
+        TriggerAlert => {
+            WARNING => [ 12 ],
+            CRITICAL => [ "Port configured inactive" ],
+        }
     },
     HostCluster => {
         OperationalStatus => $rcmap_default{'OperationalStatus'}
@@ -946,9 +949,12 @@ sub queryStorwize {
                 if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                # Not OK "Active_Configured"
+                # Not OK ("Active_Configured")
                 if ($obj{'OperationalStatus'} != 2) {
-                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}})) {
+                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}{'CRITICAL'}})) {
+                        $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
+                    }
+                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}{'WARNING'}})) {
                         if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
                             $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                         }
