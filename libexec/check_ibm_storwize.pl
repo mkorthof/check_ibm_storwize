@@ -1326,26 +1326,26 @@ sub queryStorwize {
         $_skipped = "Skip:${skipped_count}/";
     }
     # Special case: Show 'Capacity Low/Out count' for volumes
-    my ($_cap, $_cap_low, $_cap_out) = ('', '', '');
+    my ($_capacity, $_capacity_low, $_capacity_out) = ('', '', '');
     if (defined $used_count_warn && $used_count_warn > 0) {
-        $_cap_low .= "Low:${used_count_warn}";
+        $_capacity_low .= "Low:${used_count_warn}";
     }
     if (defined $used_count_crit && $used_count_crit > 0) {
-        $_cap_out .= "Out:${used_count_crit}";
+        $_capacity_out .= "Insufficient:${used_count_crit}";
     }
-    if ($_cap_low ne '' || $_cap_out ne '') {
-        $_cap = " (Capacity " . join('/', grep $_, $_cap_low, $_cap_out) . ")";
+    if ($_capacity_low ne '' || $_capacity_out ne '') {
+        $_capacity = " (Capacity " . join('/', grep $_, $_capacity_low, $_capacity_out) . ")";
     }
 
     $$out{'retStr'} =~ s/^ //;
     $$out{'retStr'} =~ s/,$//;
     if ($inst_count != 0) {
-        if ($$out{'retStr'} ne '' && ${_cap} eq '') {
+        if ($$out{'retStr'} ne '' && ${_capacity} eq '') {
             $$out{'retStr'} = " - $$out{'retStr'}";
         } else {
             $$out{'retStr'} = " $$out{'retStr'}";
         }
-        $$out{'retStr'} = "NOK:$inst_count_nok/OK:$inst_count_ok/${_stopped}${_skipped}Total:$inst_count${_cap}".$$out{'retStr'};
+        $$out{'retStr'} = "NOK:$inst_count_nok/OK:$inst_count_ok/${_stopped}${_skipped}Total:$inst_count${_capacity}".$$out{'retStr'};
     }
 
     # Special case: Check if at least one QuorumDisk was in the "active='TRUE'" state and add to *end* of retStr
