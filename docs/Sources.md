@@ -14,7 +14,8 @@ You must install Standard Based Linux Instrumentation package:
 
 ### Repository
 
-[https://github.com/claneys/pack-storwize](https://github.com/claneys/pack-storwize)
+- [https://github.com/claneys/pack-storwize](https://github.com/claneys/pack-storwize)
+- Local mirror: [orig/pack-storwize-master](orig/pack-storwize-master)
 
 # Templates
 
@@ -47,6 +48,8 @@ Nagios Templates examples are located in "pack" dir (and time_templates.cfg in "
 Script [check_ibm_svc.pl](<https://www.bityard.org/blog/_media/2013/12/28/check_ibm_storwize.pl>) by [Frank Fegert](https://www.bityard.org/blog/about) (SVN Id: "u09422fra")
 
 As far is I know, this is the original first version
+
+Local mirror: [orig/nagios_monitoring_ibm_svc_storwize](orig/nagios_monitoring_ibm_svc_storwize)
 
 ### Blog posts:
 
