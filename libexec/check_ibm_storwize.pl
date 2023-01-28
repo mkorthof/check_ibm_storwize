@@ -15,7 +15,7 @@ use Time::Local;
 #
 # Variables
 #
-my $version = "v20221223-mk";
+my $version = "v20230128-mk";
 my %conf = (
     namespace => '/root/ibm',
     service => 'IBMTSSVC',
@@ -168,7 +168,10 @@ my %rcmap = (
     },
     FCPort => {
         OperationalStatus => $rcmap_default{'OperationalStatus'},
-        TriggerAlert => [ 12, "Port configured inactive" ],
+        TriggerAlert => {
+            WARNING => [ 12 ],
+            CRITICAL => [ "Port configured inactive" ],
+        }
     },
     HostCluster => {
         OperationalStatus => $rcmap_default{'OperationalStatus'}
@@ -329,13 +332,13 @@ sub cli {
             $$cfg{'critical'} = $opts{c};
         } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} ne '') {
             $$cfg{'critical'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'};
-            print ("WARN: missing argument \"-c crit\", using default value '$$cfg{'critical'}'\n");
+            print ("INFO: missing argument \"-c crit\", using default value '$$cfg{'critical'}'\n");
         }
         if (exists $opts{w} && $opts{w} ne '' ) {
             $$cfg{'warning'} = $opts{w};
         } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} ne '') {
             $$cfg{'warning'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'};
-            print ("WARN: missing argument \"-w warn\", using default value '$$cfg{'warning'}'\n");
+            print ("INFO: missing argument \"-w warn\", using default value '$$cfg{'warning'}'\n");
         }
         if (exists $opts{s} && $opts{s} ne '' ) {
             $$cfg{'skip'} = $opts{s};
@@ -351,6 +354,7 @@ sub cli {
 # Returns: size
 sub convSize {
    my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
+   $s = 0 if (!defined($s));
    if ( $$cfg{'bytes'} ne 1 ) {
         my $size = 0;
         $size = $s if ($s =~ /^\d+$/);
@@ -369,6 +373,7 @@ sub convSize {
 # Returns: speed
 sub convSpeed {
     my( $cfg, $s, $n ) = ( \%conf, shift, 0 );
+    $s = 0 if (!defined($s));
     if ( $$cfg{'bytes'} ne 1 ) {
         my $speed = 0;
         $speed = $s if ($s =~ /^\d+$/);
@@ -397,8 +402,20 @@ sub queryStorwize {
     $cmd = "$$cfg{'wbemcli'} $$cfg{'wbemcli_opt'} ei \'$objectPath\' 2>&1";
     # TEST mode 1: replace cmd with mock
     if ($$cfg{'test'} == 1) {
-        $cmd = "cat ../test/$$cfg{'check'}.txt";
-        print("TEST1: using mock \"../test/$$cfg{'check'}.txt\" .. \n" );
+        my $testpath = '';
+        foreach my $t ( 'test', '../test', ) {
+            if (-f "$t/$$cfg{'check'}.txt") {
+                $testpath="$t/$$cfg{'check'}.txt";
+                last;
+            }
+        }
+        if ($testpath ne '') {
+            $cmd = "cat $testpath";
+            print("TEST1: using mock \"$testpath\" .. \n" );
+        } else {
+            print("TEST1: can't find \"$$cfg{'check'}.txt\", exiting .. \n" );
+            exit(1);
+        }
     }
     # TEST mode 2: use local test server (replace objectpath)
     if ($$cfg{'test'} == 2) {
@@ -450,13 +467,12 @@ sub queryStorwize {
             exit 2;
         }
         # Check both CIM_* and IBMTSSVC_* Classes, e.g. /^host:5989/root/ibm:(IBMTSSVC_Array|(CIM|IBMTSSVC)_.*)\.(.*)$/
-        #   if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}\/root\/ibm:($$cfg{'service'}_$$cfg{'check'}|(CIM|IBMTSSVC)_.*)\.(.*)$/ ) == 1) {
         if (( $line =~ /^$$cfg{'host'}:$$cfg{'port'}$$cfg{'namespace'}:$$cfg{'service'}_$$cfg{'check'}\.(.*)$/ ) == 1) {
             $obj_begin = 1;
         } elsif ((($prop_name, $prop_value) = $line =~ /^-(.*)=(.*)$/ ) == 2) {
             $prop_value =~ s/"//g;
             $obj{$prop_name} = $prop_value;
-        } elsif ($line =~ /^\s*$/ && $obj_begin == 1) {
+        } elsif ($line =~ /^\s*$/ && (defined($obj_begin) && $obj_begin == 1)) {
             $obj_begin = 0;
             $inst_count++;
             # Test: Use local CIMON server
@@ -843,15 +859,17 @@ sub queryStorwize {
                 if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                my ($total, $used);
-                if ($obj{'PhysicalCapacity'} ne '' && $obj{'PhysicalFreeCapacity' ne '' }) {
+                my ($total, $used, $usedpct) = (0, 0, 0);
+                if ( (defined($obj{'PhysicalCapacity'}) && defined($obj{'PhysicalFreeCapacity'})) && ($obj{'PhysicalCapacity'} ne '' && $obj{'PhysicalFreeCapacity'} ne '') ) {
                     $used = $obj{'PhysicalCapacity'} - $obj{'PhysicalFreeCapacity'};
                     $total = $obj{'PhysicalCapacity'}
                 } else {
                     $used = $obj{'UsedCapacity'};
                     $total = $obj{'TotalManagedSpace'};
                 }
-                my $usedpct = sprintf("%.0f",(${used}/${total})*100);
+                if (($used != 0 && $total != 0)) {
+                    $usedpct = sprintf("%.0f",(${used}/${total})*100);
+                }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1 ) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'ConcreteStoragePool'}{'NativeStatus'}{$obj{'NativeStatus'}},$$rcmap{'ConcreteStoragePool'}{'OperationalStatus'}{$obj{'OperationalStatus'}},Used:${usedpct}%)";
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
@@ -946,9 +964,12 @@ sub queryStorwize {
                 if (($$cfg{'skip'} ne '') && ($obj{'ElementName'} =~ $$cfg{'skip'})) {
                     next;
                 }
-                # Not OK "Active_Configured"
+                # Not OK ("Active_Configured")
                 if ($obj{'OperationalStatus'} != 2) {
-                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}})) {
+                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}{'CRITICAL'}})) {
+                        $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
+                    }
+                    if (grep(/^($obj{'OperationalStatus'}|$obj{'StatusDescriptions'})$/, @{$$rcmap{'FCPort'}{'TriggerAlert'}{'WARNING'}})) {
                         if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
                             $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                         }
@@ -961,26 +982,37 @@ sub queryStorwize {
                     } elsif ($obj{'PortID'} ne '') {
                         $port = "p$obj{'PortID'}";
                     }
+                    # Trim description text
                     if ("$obj{'StatusDescriptions'}" ne '') {
                         ($desc = $obj{'StatusDescriptions'}) =~ s/^Port\s//;
                         $desc =~ s/unconfigured inactive/unconf_inactive/;
                         $desc =~ s/configured inactive/conf_inactive/;
                     }
-                    # Stopped (not failed)
-                    if ($obj{'OperationalStatus'} == 10 || $obj{'StatusDescriptions'} eq 'Port unconfigured inactive') {
-                        if ($desc ne '') {
+                    # No contact (WARN)
+                    if ($obj{'OperationalStatus'} == 12) {
+                        if ($desc ne '' ) {
                             $$out{'retStr'} .= " $port($desc)";
                         } else {
                             $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
                         }
-                        $stopped_count++;
                     # Not installed (not failed)
                     } elsif ($obj{'OperationalStatus'} == 12) {
                         $$out{'retStr'} .= " $port($$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
-                    # SFP installed, no host connected or no LUN served: "Offline"
+                    # Not in use (inactive)
+                    } elsif ($obj{'StatusDescriptions'} eq 'Port unconfigured inactive') {
+                        $$out{'retStr'} .= " $port($desc)";
+                    # SFP installed, no host connected or no LUN served: "Offline" (WARN)
                     } elsif ($obj{'StatusDescriptions'} eq 'Port configured inactive') {
                         $$out{'retStr'} .= " $port(nok:$desc)";
                         $inst_count_nok++;
+                    # Stopped
+                    } elsif ($obj{'OperationalStatus'} == 10) {
+                        if ($desc ne '') {
+                            $$out{'retStr'} .= " $port(stopped:$desc)";
+                        } else {
+                            $$out{'retStr'} .= " $port(stopped:$$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}})";
+                        }
+                        $stopped_count++;
                     } else {
                         $$out{'retStr'} .= " $$rcmap{'FCPort'}{'OperationalStatus'}{$obj{'OperationalStatus'}}";
                         if ($$out{'retRC'} != $$cfg{'RC'}{'CRITICAL'}) {
@@ -1205,11 +1237,14 @@ sub queryStorwize {
                     $skipped_count++;
                     next;
                 }
-                my $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
-                if ($$cfg{'debug'} > 0) {
-                    print("DEBUG: $obj{'ElementName'} CacheState=$obj{'CacheState'} OperationalStatus=$obj{'OperationalStatus'} NativeStatus=$obj{'NativeStatus'}" .
-                        " UncompressedUsedCapacity=" . convSize($obj{'UncompressedUsedCapacity'}) .
-                        " ConsumableBlocks=" . convSize($obj{'ConsumableBlocks'}) . " usedpct=${usedpct}%" . "\n")
+                my $usedpct = 0;
+                if (defined($obj{'UncompressedUsedCapacity'}) && defined($obj{'ConsumableBlocks'})) {
+                    $usedpct = sprintf("%.0f",($obj{'UncompressedUsedCapacity'}/$obj{'ConsumableBlocks'})*100);
+                    if ($$cfg{'debug'} > 0) {
+                        print("DEBUG: $obj{'ElementName'} CacheState=$obj{'CacheState'} OperationalStatus=$obj{'OperationalStatus'} NativeStatus=$obj{'NativeStatus'}" .
+                            " UncompressedUsedCapacity=" . convSize($obj{'UncompressedUsedCapacity'}) .
+                            " ConsumableBlocks=" . convSize($obj{'ConsumableBlocks'}) . " usedpct=${usedpct}%" . "\n")
+                    }
                 }
                 if ($obj{'OperationalStatus'} != 2 || $obj{'NativeStatus'} != 1) {
                     $$out{'retStr'} .= " $obj{'ElementName'}($$rcmap{'StorageVolume'}{'CacheState'}{$obj{'CacheState'}}," . 
@@ -1302,26 +1337,26 @@ sub queryStorwize {
         $_skipped = "Skip:${skipped_count}/";
     }
     # Special case: Show 'Capacity Low/Out count' for volumes
-    my ($_cap, $_cap_low, $_cap_out) = ('', '', '');
+    my ($_capacity, $_capacity_low, $_capacity_out) = ('', '', '');
     if (defined $used_count_warn && $used_count_warn > 0) {
-        $_cap_low .= "Low:${used_count_warn}";
+        $_capacity_low .= "Low:${used_count_warn}";
     }
     if (defined $used_count_crit && $used_count_crit > 0) {
-        $_cap_out .= "Out:${used_count_crit}";
+        $_capacity_out .= "Insufficient:${used_count_crit}";
     }
-    if ($_cap_low ne '' || $_cap_out ne '') {
-        $_cap = " (Capacity " . join('/', grep $_, $_cap_low, $_cap_out) . ")";
+    if ($_capacity_low ne '' || $_capacity_out ne '') {
+        $_capacity = " (Capacity " . join('/', grep $_, $_capacity_low, $_capacity_out) . ")";
     }
 
     $$out{'retStr'} =~ s/^ //;
     $$out{'retStr'} =~ s/,$//;
     if ($inst_count != 0) {
-        if ($$out{'retStr'} ne '' && ${_cap} eq '') {
+        if ($$out{'retStr'} ne '' && ${_capacity} eq '') {
             $$out{'retStr'} = " - $$out{'retStr'}";
         } else {
             $$out{'retStr'} = " $$out{'retStr'}";
         }
-        $$out{'retStr'} = "NOK:$inst_count_nok/OK:$inst_count_ok/${_stopped}${_skipped}Total:$inst_count${_cap}".$$out{'retStr'};
+        $$out{'retStr'} = "NOK:$inst_count_nok/OK:$inst_count_ok/${_stopped}${_skipped}Total:$inst_count${_capacity}".$$out{'retStr'};
     }
 
     # Special case: Check if at least one QuorumDisk was in the "active='TRUE'" state and add to *end* of retStr

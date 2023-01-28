@@ -1,0 +1,1143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Nagios Monitoring - IBM SVC and Storwize - bityard Blog</title>
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><![endif]-->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(["setCookieDomain", "*.www.bityard.org"]);
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+  (function() {
+    var u="//www.bityard.org/piwik/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", 1]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0];
+    g.type="text/javascript"; g.async=true; g.defer=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><img src="//www.bityard.org/piwik/piwik.php?idsite=1&rec=1" style="border:0" alt="" /></noscript>
+<meta name="generator" content="DokuWiki"/>
+<meta name="robots" content="index,follow"/>
+<meta name="keywords" content="IBM,Nagios,SVC,Storwize"/>
+<meta name="description" content="Nagios Monitoring - IBM SVC and Storwize Nagios Monitoring - IBM SVC and Storwize (Update) Some time ago i wrote a -- rather crude -- Nagios plugin to monitor IBM SAN Volume Controller (SVC) systems. The plugin was initially targeted at version 4.3.x of the SVC software on 2145-8F2 nodes, we used back then. Since the initial implementation of the plugin we upgraded the hard- and software of our SVC systems several times and are now at version 7.1.x of the SVC software on 2145-CG8 nodes. Recently…"/>
+<meta name="author" content="Frank Fegert"/>
+<meta name="copyright" content="Frank Fegert"/>
+<meta name="date" content="2013-12-28T22:18:28+0100"/>
+<link rel="search" type="application/opensearchdescription+xml" href="/blog/lib/exe/opensearch.php" title="bityard Blog"/>
+<link rel="start" href="/blog/"/>
+<link rel="contents" href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize?do=index" title="Sitemap"/>
+<link rel="alternate" type="application/rss+xml" title="Recent Changes" href="/blog/feed.php"/>
+<link rel="alternate" type="application/rss+xml" title="Current namespace" href="/blog/feed.php?mode=list&amp;ns=2013:12:28"/>
+<link rel="alternate" type="text/html" title="Plain HTML" href="/blog/_export/xhtml/2013/12/28/nagios_monitoring_ibm_svc_storwize"/>
+<link rel="alternate" type="text/plain" title="Wiki Markup" href="/blog/_export/raw/2013/12/28/nagios_monitoring_ibm_svc_storwize"/>
+<link rel="canonical" href="https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize"/>
+<link rel="stylesheet" type="text/css" href="/blog/lib/exe/css.php?t=mnml-blog&amp;tseed=f89ec0f282f100dad8d5d6b998025a55"/>
+<link rel="author" href="https://plus.google.com/104986222190197811119"/>
+<link rel="publisher" href="https://plus.google.com/104986222190197811119"/>
+<link rel="pingback" href="https://www.bityard.org/blog/lib/plugins/blogtng/exe/pingback.php/2013:12:28:nagios_monitoring_ibm_svc_storwize"/>
+<link rel="prev" href="/blog/2013/12/16/debian_wheezy_on_ibm_power_multipath"/>
+<link rel="next" href="/blog/2014/01/12/nagios_monitoring_infortrend_eonstor"/>
+<!--[if gte IE 9]><!-->
+<script type="text/javascript">/*<![CDATA[*/var NS='2013:12:28';var JSINFO = {"id":"2013:12:28:nagios_monitoring_ibm_svc_storwize","namespace":"2013:12:28","plugins":{"edittable":{"default columnwidth":""}}};
+/*!]]>*/</script>
+<script type="text/javascript" charset="utf-8" src="/blog/lib/exe/jquery.php?tseed=23f888679b4f1dc26eef34902aca964f"></script>
+<script type="text/javascript" charset="utf-8" src="/blog/lib/exe/js.php?t=mnml-blog&amp;tseed=f89ec0f282f100dad8d5d6b998025a55"></script>
+<script type="text/javascript" charset="utf-8" src="https://apis.google.com/js/plusone.js">/*<![CDATA[*/{lang: 'de'}
+/*!]]>*/</script>
+<script type="text/javascript" charset="utf-8"></script>
+<!--<![endif]-->
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="shortcut icon" href="/blog/lib/tpl/mnml-blog/images/favicon.ico" />
+<link rel="apple-touch-icon" href="/blog/lib/tpl/mnml-blog/images/apple-touch-icon.png" />
+<!--[if lte IE 8]><link rel="stylesheet" media="all" type="text/css" href="/blog/lib/tpl/mnml-blog/css/mnml-blog_screen_iehacks.css" /><![endif]-->
+<!--[if lt IE 7]><style type="text/css">img { behavior: url(/blog/lib/tpl/mnml-blog/js/iepngfix/iepngfix.htc); }</style><![endif]-->
+</head>
+
+<body>
+<div id="pagewrap">
+
+    <!-- start header -->
+    <div id="tmpl_header">
+        <a href="/blog/" name="dokuwiki__top" id="dokuwiki__top" accesskey="h" class="tmpl_header_logo_txt">bityard Blog</a>
+
+       <div id="tmpl_header_nav">
+<ul>
+<li class="level1"><div class="li"> <span class="curid"><a href="/blog/start" class="wikilink1" title="start">Home</a></span></div>
+</li>
+<li class="level1"><div class="li"> <a href="/blog/about" class="wikilink1" title="about">About</a></div>
+</li>
+<li class="level1"><div class="li"> <a href="/blog/impressum" class="wikilink1" title="impressum">Impressum</a></div>
+</li>
+</ul>
+
+            <div id="tmpl_header_nav_search" class="dokuwiki">
+<form action="/blog/start" accept-charset="utf-8" class="search" id="dw__search" method="get" role="search"><div class="no"><input type="hidden" name="do" value="search" /><input type="text" placeholder="Search" id="qsearch__in" accesskey="f" name="id" class="edit" title="[F]" /><button type="submit" title="Search">Search</button><div id="qsearch__out" class="ajax_qsearch JSpopup"></div></div></form>
+            </div>
+            <div class="clearer"></div>
+        </div>
+        <div class="clearer"></div>
+    </div>
+    <!-- end header -->
+
+
+    <!-- start main content area -->
+    <div class="dokuwiki">
+        
+        <!-- start left col -->
+        <div id="content">
+            <div class="page">
+
+
+<!-- start rendered page content -->
+<!--<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
+<rdf:Description
+rdf:about="https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize"
+dc:identifier="https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize"
+dc:title="Nagios Monitoring - IBM SVC and Storwize"
+trackback:ping="https://www.bityard.org/blog/lib/plugins/blogtng/exe/trackback.php/2013:12:28:nagios_monitoring_ibm_svc_storwize" />
+</rdf:RDF>--><div class="blogtng_entry">
+<h1 class="hspec"><a href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize" class="postdate">2013-12-28</a><a href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize"> // Nagios Monitoring - IBM SVC and Storwize</a></h1>
+<div class="level1"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-3021074823570713"
+     data-ad-slot="5502901135"
+     data-ad-format="auto"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+<div class="level1">
+<div class="noteimportant">Please be sure to also read the update <a href="/blog/2014/12/24/nagios_monitoring_ibm_svc_storwize_update" class="wikilink1" title="2014:12:24:nagios_monitoring_ibm_svc_storwize_update">Nagios Monitoring - IBM SVC and Storwize (Update)</a> to this blog post.
+</div>
+<p>
+Some time ago i wrote a – rather crude – Nagios plugin to monitor <a href="https://en.wikipedia.org/wiki/IBM_SAN_Volume_Controller" class="interwiki iw_wp" title="https://en.wikipedia.org/wiki/IBM_SAN_Volume_Controller">IBM SAN Volume Controller (SVC)</a> systems. The plugin was initially targeted at version 4.3.x of the SVC software on 2145-8F2 nodes, we used back then. Since the initial implementation of the plugin we upgraded the hard- and software of our SVC systems several times and are now at version 7.1.x of the SVC software on 2145-CG8 nodes. Recently we also got some IBM Storwize V3700 storage arrays, which share the same code as the SVC, but are missing some of the features and provide additional other features. A code and functional review of the original plugin for the SVC as well as an adaption for the Storwize arrays seemed to be in order. The result were the two plugins <code>check_ibm_svc.pl</code> and <code>check_ibm_storwize.pl</code>. They share a lot of common code with the original plugin, but are still maintained seperately for the simple reason that IBM might develop the SVC and the Storwize code in slightly different, incompatible directions.
+</p>
+
+<p>
+In order to run the plugins, you need to have the command line tool <code>wbemcli</code> from the <a href="http://sourceforge.net/projects/sblim/" class="urlextern" title="http://sourceforge.net/projects/sblim/" rel="nofollow">Standards Based Linux Instrumentation</a> project installed on the Nagios system. In my case the <code>wbemcli</code> command line tool is placed in <code>/opt/sblim-wbemcli/bin/wbemcli</code>. If you use a different path, adapt the configuration hash entry “<code>%conf{&#039;wbemcli&#039;}</code>” according to your environment. The plugins use <code>wbemcli</code> to query the CIMOM service on the SVC or Storwize system for the necessary information. Therefor a network connection from the Nagios system to the SVC or Storwize systems on port TCP/5989 must be allowed and a user with the “<code>Monitor</code>” authorization must be created on the SVC or Storwize systems:
+</p>
+<pre class="cli"><span class="cli_prompt">IBM_2145:svc:admin$ </span><span class="cli_command">mkuser -name nagios -usergrp Monitor -password &lt;password&gt;</span>
+</pre>
+<p>
+Or in the WebUI:
+</p>
+
+<p>
+<a href="/blog/_detail/2013/12/28/svc_add_user_dialog.png?id=2013%3A12%3A28%3Anagios_monitoring_ibm_svc_storwize" class="media" title="2013:12:28:svc_add_user_dialog.png"><img src="/blog/_media/2013/12/28/svc_add_user_dialog.png" class="media" title="Nagios user on the SVC or Storwize system to query information via CIMOM." alt="Nagios user on the SVC or Storwize system to query information via CIMOM." /></a>
+</p>
+
+</div>
+
+<h2 class="sectionedit1" id="generic">Generic</h2>
+<div class="level2"><ol><li class="level1"><p><strong>Optional</strong>: Enable SNMP traps to be sent to the Nagios system on each of the SVC or Storwize device. This requires SNMPD and SNMPTT to be already setup on the Nagios system. Login to the SVC or Storwize <abbr title="Command-line interface">CLI</abbr> and issue the command:
+</p>
+<pre class="cli"><span class="cli_prompt">IBM_2145:svc:admin$ </span><span class="cli_command">mksnmpserver -ip &lt;IP adress&gt; -community public -error on -warning on -info on -port 162</span>
+</pre>
+<p>
+Where <code>&lt;IP&gt;</code> is the IP address of your Nagios system. Or in the SVC or Storwize WebUI navigate to:
+</p>
+<pre class="code">-&gt; Settings
+   -&gt; Event Notifications
+      -&gt; SNMP
+         -&gt; &lt;Enter IP of the Nagios system and the SNMPDs community string&gt;</pre>
+
+<p>
+Verify the port <strong>UDP/162</strong> on the Nagios system can be reached from the SVC or Storwize devices.</p></li></ol></div>
+
+<h2 class="sectionedit2" id="san_volume_controller_svc">SAN Volume Controller (SVC)</h2>
+<div class="level2">
+
+<p>
+For SAN Volume Controller (SVC) devices the whole setup looks like this:</p><ol><li class="level1"><p>Download the <a href="/blog/_media/2013/12/28/check_ibm_svc.pl" class="media mediafile mf_pl" title="2013:12:28:check_ibm_svc.pl (26.6 KB)">Nagios plugin check_ibm_svc.pl</a> and place it in the plugins directory of your Nagios system, in this example <code>/usr/lib/nagios/plugins/</code>:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">mv -i check_ibm_svc.pl /usr/lib/nagios/plugins/</span>
+<span class="cli_prompt">$ </span><span class="cli_command">chmod 755 /usr/lib/nagios/plugins/check_ibm_svc.pl</span>
+</pre></li><li class="level1"><p>Adjust the plugin settings according to your environment. Edit the following variable assignments:
+</p>
+<pre class="code">my %conf = (
+    wbemcli =&gt; &#039;/opt/sblim-wbemcli/bin/wbemcli&#039;,</pre></li><li class="level1"><p>Define the following Nagios commands. In this example this is done in the file <code>/etc/nagios-plugins/config/check_svc.cfg</code>:
+</p>
+<pre class="code"># check SVC Backend Controller status
+define command {
+    command_name    check_svc_bc
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C BackendController
+}
+# check SVC Backend SCSI Status
+define command {
+    command_name    check_svc_btspe
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C BackendTargetSCSIPE
+}
+# check SVC MDisk status
+define command {
+    command_name    check_svc_bv
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C BackendVolume
+}
+# check SVC Cluster status
+define command {
+    command_name    check_svc_cl
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C Cluster
+}
+# check SVC MDiskGroup status
+define command {
+    command_name    check_svc_csp
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C ConcreteStoragePool
+}
+# check SVC Ethernet Port status
+define command {
+    command_name    check_svc_eth
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C EthernetPort
+}
+# check SVC FC Port status
+define command {
+    command_name    check_svc_fcp
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C FCPort
+}
+# check SVC FC Port statistics
+define command {
+    command_name    check_svc_fcp_stats
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C FCPortStatistics
+}
+# check SVC I/O Group status and memory allocation
+define command {
+    command_name    check_svc_iogrp
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C IOGroup -w $ARG1$ -c $ARG2$
+}
+# check SVC WebUI status
+define command {
+    command_name    check_svc_mc
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C MasterConsole
+}
+# check SVC VDisk Mirror status
+define command {
+    command_name    check_svc_mirror
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C MirrorExtent
+}
+# check SVC Node status
+define command {
+    command_name    check_svc_node
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C Node
+}
+# check SVC Quorum Disk status
+define command {
+    command_name    check_svc_quorum
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C QuorumDisk
+}
+# check SVC Storage Volume status
+define command {
+    command_name    check_svc_sv
+    command_line    $USER1$/check_ibm_svc.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C StorageVolume
+}</pre>
+
+<p>
+Replace <code>&lt;user&gt;</code> and <code>&lt;password&gt;</code> with name and password of the CIMOM user created above.</p></li><li class="level1"><p>Define a group of services in your Nagios configuration to be checked for each SVC system:
+</p>
+<pre class="code"># check sshd
+define service {
+    use                     generic-service
+    hostgroup_name          svc
+    service_description     Check_SSH
+    check_command           check_ssh
+}
+# check_tcp CIMOM
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_CIMOM
+    check_command           check_tcp!5989
+}
+# check_svc_bc
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Backend_Controller
+    check_command           check_svc_bc
+}
+# check_svc_btspe
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Backend_Target
+    check_command           check_svc_btspe
+}
+# check_svc_bv
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Backend_Volume
+    check_command           check_svc_bv
+}
+# check_svc_cl
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Cluster
+    check_command           check_svc_cl
+}
+# check_svc_csp
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Storage_Pool
+    check_command           check_svc_csp
+}
+# check_svc_eth
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Ethernet_Port
+    check_command           check_svc_eth
+}
+# check_svc_fcp
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_FC_Port
+    check_command           check_svc_fcp
+}
+# check_svc_fcp_stats
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_FC_Port_Statistics
+    check_command           check_svc_fcp_stats
+}
+# check_svc_iogrp
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_IO_Group
+    check_command           check_svc_iogrp!102400!204800
+}
+# check_svc_mc
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Master_Console
+    check_command           check_svc_mc
+}
+# check_svc_mirror
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Mirror_Extents
+    check_command           check_svc_mirror
+}
+# check_svc_node
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Node
+    check_command           check_svc_node
+}
+# check_svc_quorum
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Quorum
+    check_command           check_svc_quorum
+}
+# check_svc_sv
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          svc
+    service_description     Check_Storage_Volume
+    check_command           check_svc_sv
+}</pre>
+
+<p>
+Replace <code>generic-service</code> with your Nagios service template. Replace <code>generic-service-pnp</code> with your Nagios service template that has performance data processing enabled.</p></li><li class="level1"><p>Define hosts in your Nagios configuration for each SVC device. In this example its named <code>svc1</code>:
+</p>
+<pre class="code">define host {
+    use         svc
+    host_name   svc1
+    alias       SAN Volume Controller 1
+    address     10.0.0.1
+    parents     parent_lan
+}</pre>
+
+<p>
+Replace <code>svc</code> with your Nagios host template for SVC devices. Adjust the <code>address</code> and <code>parents</code> parameters according to your environment.</p></li><li class="level1"><p>Define a hostgroup in your Nagios configuration for all SVC systems. In this example it is named <code>svc</code>. The above checks are run against each member of the hostgroup:
+</p>
+<pre class="code">define hostgroup {
+    hostgroup_name  svc
+    alias           IBM SVC Clusters
+    members         svc1
+}</pre></li><li class="level1"><p>Run a configuration check and if successful reload the Nagios process:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">/usr/sbin/nagios3 -v /etc/nagios3/nagios.cfg</span>
+<span class="cli_prompt">$ </span><span class="cli_command">/etc/init.d/nagios3 reload</span>
+</pre></li></ol><p>
+The new hosts and services should soon show up in the Nagios web interface.
+</p>
+
+</div>
+
+<h2 class="sectionedit3" id="storwize">Storwize</h2>
+<div class="level2">
+
+<p>
+For Storwize devices the whole setup looks like this:</p><ol><li class="level1"><p>Download the <a href="/blog/_media/2013/12/28/check_ibm_storwize.pl" class="media mediafile mf_pl" title="2013:12:28:check_ibm_storwize.pl (28.7 KB)">Nagios plugin check_ibm_storwize.pl</a> and place it in the plugins directory of your Nagios system, in this example <code>/usr/lib/nagios/plugins/</code>:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">mv -i check_ibm_storwize.pl /usr/lib/nagios/plugins/</span>
+<span class="cli_prompt">$ </span><span class="cli_command">chmod 755 /usr/lib/nagios/plugins/check_ibm_storwize.pl</span>
+</pre></li><li class="level1"><p>Adjust the plugin settings according to your environment. Edit the following variable assignments:
+</p>
+<pre class="code">my %conf = (
+    wbemcli =&gt; &#039;/opt/sblim-wbemcli/bin/wbemcli&#039;,</pre></li><li class="level1"><p>Define the following Nagios commands. In this example this is done in the file <code>/etc/nagios-plugins/config/check_storwize.cfg</code>:
+</p>
+<pre class="code"># check Storwize RAID Array status
+define command {
+    command_name    check_storwize_array
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C Array
+}
+# check Storwize Hot Spare coverage
+define command {
+    command_name    check_storwize_asc
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C ArrayBasedOnDiskDrive
+}
+# check Storwize MDisk status
+define command {
+    command_name    check_storwize_bv
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C BackendVolume
+}
+# check Storwize Cluster status
+define command {
+    command_name    check_storwize_cl
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C Cluster
+}
+# check Storwize MDiskGroup status
+define command {
+    command_name    check_storwize_csp
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C ConcreteStoragePool
+}
+# check Storwize Disk status
+define command {
+    command_name    check_storwize_disk
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C DiskDrive
+}
+# check Storwize Enclosure status
+define command {
+    command_name    check_storwize_enc
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C Enclosure
+}
+# check Storwize Ethernet Port status
+define command {
+    command_name    check_storwize_eth
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C EthernetPort
+}
+# check Storwize FC Port status
+define command {
+    command_name    check_storwize_fcp
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C FCPort
+}
+# check Storwize I/O Group status and memory allocation
+define command {
+    command_name    check_storwize_iogrp
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C IOGroup -w $ARG1$ -c $ARG2$
+}
+# check Storwize Hot Spare status
+define command {
+    command_name    check_storwize_is
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C IsSpare
+}
+# check Storwize WebUI status
+define command {
+    command_name    check_storwize_mc
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C MasterConsole
+}
+# check Storwize VDisk Mirror status
+define command {
+    command_name    check_storwize_mirror
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C MirrorExtent
+}
+# check Storwize Node status
+define command {
+    command_name    check_storwize_node
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C Node
+}
+# check Storwize Quorum Disk status
+define command {
+    command_name    check_storwize_quorum
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C QuorumDisk
+}
+# check Storwize Storage Volume status
+define command {
+    command_name    check_storwize_sv
+    command_line    $USER1$/check_ibm_storwize.pl -H $HOSTNAME$ -u &lt;user&gt; -p &lt;password&gt; -C StorageVolume
+}</pre>
+
+<p>
+Replace <code>&lt;user&gt;</code> and <code>&lt;password&gt;</code> with name and password of the CIMOM user created above.</p></li><li class="level1"><p>Define a group of services in your Nagios configuration to be checked for each Storwize system:
+</p>
+<pre class="code"># check sshd
+define service {
+    use                     generic-service
+    hostgroup_name          storwize
+    service_description     Check_SSH
+    check_command           check_ssh
+}
+# check_tcp CIMOM
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_CIMOM
+    check_command           check_tcp!5989
+}
+# check_storwize_array
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Array
+    check_command           check_storwize_array
+}
+# check_storwize_asc
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Array_Spare_Coverage
+    check_command           check_storwize_asc
+}
+# check_storwize_bv
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Backend_Volume
+    check_command           check_storwize_bv
+}
+# check_storwize_cl
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Cluster
+    check_command           check_storwize_cl
+}
+# check_storwize_csp
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Storage_Pool
+    check_command           check_storwize_csp
+}
+# check_storwize_disk
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Disk_Drive
+    check_command           check_storwize_disk
+}
+# check_storwize_enc
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Enclosure
+    check_command           check_storwize_enc
+}
+# check_storwize_eth
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Ethernet_Port
+    check_command           check_storwize_eth
+}
+# check_storwize_fcp
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_FC_Port
+    check_command           check_storwize_fcp
+}
+# check_storwize_iogrp
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_IO_Group
+    check_command           check_storwize_iogrp!102400!204800
+}
+# check_storwize_is
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Hot_Spare
+    check_command           check_storwize_is
+}
+# check_storwize_mc
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Master_Console
+    check_command           check_storwize_mc
+}
+# check_storwize_mirror
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Mirror_Extents
+    check_command           check_storwize_mirror
+}
+# check_storwize_node
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Node
+    check_command           check_storwize_node
+}
+# check_storwize_quorum
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Quorum
+    check_command           check_storwize_quorum
+}
+# check_storwize_sv
+define service {
+    use                     generic-service-pnp
+    hostgroup_name          storwize
+    service_description     Check_Storage_Volume
+    check_command           check_storwize_sv
+}</pre>
+
+<p>
+Replace <code>generic-service</code> with your Nagios service template. Replace <code>generic-service-pnp</code> with your Nagios service template that has performance data processing enabled.</p></li><li class="level1"><p>Define hosts in your Nagios configuration for each Storwize device. In this example its named <code>storwize1</code>:
+</p>
+<pre class="code">define host {
+    use         disk
+    host_name   storwize1
+    alias       Storwize Disk Storage 1
+    address     10.0.0.1
+    parents     parent_lan
+}</pre>
+
+<p>
+Replace <code>disk</code> with your Nagios host template for storage devices. Adjust the <code>address</code> and <code>parents</code> parameters according to your environment.</p></li><li class="level1"><p>Define a hostgroup in your Nagios configuration for all SVC systems. In this example it is named <code>storwize</code>. The above checks are run against each member of the hostgroup:
+</p>
+<pre class="code">define hostgroup {
+    hostgroup_name  storwize
+    alias           IBM Storwize Devices
+    members         storwize1
+}</pre></li><li class="level1"><p>Run a configuration check and if successful reload the Nagios process:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">/usr/sbin/nagios3 -v /etc/nagios3/nagios.cfg</span>
+<span class="cli_prompt">$ </span><span class="cli_command">/etc/init.d/nagios3 reload</span>
+</pre></li></ol><p>
+The new hosts and services should soon show up in the Nagios web interface.
+</p>
+
+</div>
+
+<h2 class="sectionedit4" id="generic1">Generic</h2>
+<div class="level2">
+
+<p>
+If the optional step in the “Generic” section above was done, SNMPTT also needs to be configured to be able to understand the incoming SNMP traps from Storwize systems. This can be achieved by the following steps:</p><ol><li class="level1"><p>Download the IBM SVC/Storwize SNMP MIB matching your software version from <a href="ftp://ftp.software.ibm.com/storage/san/sanvc/" class="urlextern" title="ftp://ftp.software.ibm.com/storage/san/sanvc/" rel="nofollow">ftp://ftp.software.ibm.com/storage/san/sanvc/</a>.</p></li><li class="level1"><p>Convert the IBM SVC/Storwize SNMP MIB definitions in <code>SVC_MIB_&lt;version&gt;.MIB</code> into a format that SNMPTT can understand.
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">/opt/snmptt/snmpttconvertmib --in=MIB/SVC_MIB_7.1.0.MIB --out=/opt/snmptt/conf/snmptt.conf.ibm-svc-710</span>
+<span class="cli_output"></span>
+<span class="cli_output">...</span>
+<span class="cli_output">Done</span>
+<span class="cli_output"></span>
+<span class="cli_output">Total translations:        3</span>
+<span class="cli_output">Successful translations:   3</span>
+<span class="cli_output">Failed translations:       0</span>
+</pre></li><li class="level1"><p>Edit the trap severity according to your requirements, e.g.:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">vim /opt/snmptt/conf/snmptt.conf.ibm-svc-710</span>
+<span class="cli_output"></span>
+<span class="cli_output">...</span>
+<span class="cli_output">EVENT tsveETrap .1.3.6.1.4.1.2.6.190.1 &quot;Status Events&quot; Critical</span>
+<span class="cli_output"></span>
+<span class="cli_output">...</span>
+<span class="cli_output">EVENT tsveWTrap .1.3.6.1.4.1.2.6.190.2 &quot;Status Events&quot; Warning</span>
+<span class="cli_output">...</span>
+</pre></li><li class="level1"><p><strong>Optional</strong>: Apply the following patch to the configuration to reduce the number of false positives:
+</p>
+<dl class="code">
+<dt><a href="/blog/_export/code/2013/12/28/nagios_monitoring_ibm_svc_storwize?codeblock=11" title="Download Snippet" class="mediafile mf_ibm-svc-710">snmptt.conf.ibm-svc-710</a></dt>
+<dd><pre class="code diff"><span class="re7">-- /opt/snmptt/conf/snmptt.conf.ibm-svc-710.orig       2013-12-28 21:16:25.000000000 +0100</span>
+<span class="re4">+++ /opt/snmptt/conf/snmptt.conf.ibm-svc-710    2013-12-28 21:17:55.000000000 +0100</span>
+<span class="re6">@@ -29,11 +29,21 @@</span>
+   <span class="nu0">16</span>: tsveMPNO
+   <span class="nu0">17</span>: tsveOBJN
+ EDESC
+<span class="re8">+# Filter and ignore the following events that are not really warnings</span>
+<span class="re8">+#   &quot;Error ID = 980440&quot;: Failed to transfer file from remote node</span>
+<span class="re8">+#   &quot;Error ID = 981001&quot;: Cluster Fabric View updated by fabric discovery</span>
+<span class="re8">+#   &quot;Error ID = 981014&quot;: LUN Discovery failed</span>
+<span class="re8">+#   &quot;Error ID = 982009&quot;: Migration complete</span>
+ #
+<span class="re8">+EVENT tsveWTrap .1.3.6.1.4.1.2.6.190.2 &quot;Status Events&quot; Normal</span>
+<span class="re8">+FORMAT tsve information trap $*</span>
+<span class="re8">+MATCH $3: <span class="br0">&#40;</span>Error ID = <span class="nu0">980440</span>|<span class="nu0">981001</span>|<span class="nu0">981014</span>|982009<span class="br0">&#41;</span></span>
+ #
+<span class="re8">+# All remaining events with this OID are actually warnings</span>
+ #
+ EVENT tsveWTrap .1.3.6.1.4.1.2.6.190.2 &quot;Status Events&quot; Warning
+ FORMAT tsve warning trap $*
+<span class="re8">+MATCH $3: !<span class="br0">&#40;</span>Error ID = <span class="nu0">980440</span>|<span class="nu0">981001</span>|<span class="nu0">981014</span>|982009<span class="br0">&#41;</span></span>
+ SDESC
+ tsve warning trap
+ Variables:</pre>
+</dd></dl></li><li class="level1"><p>Add the new configuration file to be included in the global SNMPTT configuration and restart the SNMPTT daemon:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">vim /opt/snmptt/snmptt.ini</span>
+<span class="cli_output"></span>
+<span class="cli_output">...</span>
+<span class="cli_output">[TrapFiles]</span>
+<span class="cli_output">snmptt_conf_files = &lt;&lt;END</span>
+<span class="cli_output">...</span>
+<span class="cli_output">/opt/snmptt/conf/snmptt.conf.ibm-svc-710</span>
+<span class="cli_output">...</span>
+<span class="cli_output">END</span>
+<span class="cli_output"></span>
+<span class="cli_prompt">$ </span><span class="cli_command">/etc/init.d/snmptt reload</span>
+</pre></li><li class="level1"><p>Download the <a href="/blog/_media/2012/10/02/check_snmp_traps.sh" class="media mediafile mf_sh" title="2012:10:02:check_snmp_traps.sh (2.6 KB)">Nagios plugin check_snmp_traps.sh</a> and place it in the plugins directory of your Nagios system, in this example <code>/usr/lib/nagios/plugins/</code>:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">mv -i check_snmp_traps.sh /usr/lib/nagios/plugins/</span>
+<span class="cli_prompt">$ </span><span class="cli_command">chmod 755 /usr/lib/nagios/plugins/check_snmp_traps.sh</span>
+</pre></li><li class="level1"><p>Define the following Nagios command to check for SNMP traps in the SNMPTT database. In this example this is done in the file <code>/etc/nagios-plugins/config/check_snmp_traps.cfg</code>:
+</p>
+<pre class="code"># check for snmp traps
+define command {
+    command_name    check_snmp_traps
+    command_line    $USER1$/check_snmp_traps.sh -H $HOSTNAME$:$HOSTADDRESS$ -u &lt;user&gt; -p &lt;pass&gt; -d &lt;snmptt_db&gt;
+}</pre>
+
+<p>
+Replace <code>user</code>, <code>pass</code> and <code>snmptt_db</code> with values suitable for your SNMPTT database environment.</p></li><li class="level1"><p>Add another service in your Nagios configuration to be checked for each SVC:
+</p>
+<pre class="code"># check snmptraps
+define service {
+    use                     generic-service
+    hostgroup_name          svc
+    service_description     Check_SNMP_traps
+    check_command           check_snmp_traps
+}</pre>
+
+<p>
+or Storwize system:
+</p>
+<pre class="code"># check snmptraps
+define service {
+    use                     generic-service
+    hostgroup_name          storwize
+    service_description     Check_SNMP_traps
+    check_command           check_snmp_traps
+}</pre></li><li class="level1"><p><strong>Optional</strong>: Define a serviceextinfo to display a folder icon next to the <code>Check_SNMP_traps</code> service check for each SVC:
+</p>
+<pre class="code">define  serviceextinfo {
+    hostgroup_name          svc
+    service_description     Check_SNMP_traps
+    notes                   SNMP Alerts
+    #notes_url               http://&lt;hostname&gt;/nagios3/nagtrap/index.php?hostname=$HOSTNAME$
+    #notes_url               http://&lt;hostname&gt;/nagios3/nsti/index.php?perpage=100&amp;hostname=$HOSTNAME$
+}</pre>
+
+<p>
+or Storwize system:
+</p>
+<pre class="code">define  serviceextinfo {
+    hostgroup_name          storwize
+    service_description     Check_SNMP_traps
+    notes                   SNMP Alerts
+    #notes_url               http://&lt;hostname&gt;/nagios3/nagtrap/index.php?hostname=$HOSTNAME$
+    #notes_url               http://&lt;hostname&gt;/nagios3/nsti/index.php?perpage=100&amp;hostname=$HOSTNAME$
+}</pre>
+
+<p>
+device. This icon provides a direct link to the SNMPTT web interface with a filter for the selected host. Uncomment the <code>notes_url</code> depending on which web interface (nagtrap or nsti) is used. Replace <code>hostname</code> with the FQDN or IP address of the server running the web interface.</p></li><li class="level1"><p>Run a configuration check and if successful reload the Nagios process:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">/usr/sbin/nagios3 -v /etc/nagios3/nagios.cfg</span>
+<span class="cli_prompt">$ </span><span class="cli_command">/etc/init.d/nagios3 reload</span>
+</pre></li><li class="level1"><p><strong>Optional</strong>: If you're running PNP4Nagios v0.6 or later to graph Nagios performance data, you can use the PNP4Nagios template in <code>pnp4nagios_storwize.tar.bz2</code> and <code>pnp4nagios_svc.tar.bz2</code> to beautify the graphs. Download the PNP4Nagios templates <a href="/blog/_media/2013/12/28/pnp4nagios_svc.tar.bz2" class="media mediafile mf_bz2" title="2013:12:28:pnp4nagios_svc.tar.bz2 (3.4 KB)">pnp4nagios_svc.tar.bz2</a> and <a href="/blog/_media/2013/12/28/pnp4nagios_storwize.tar.bz2" class="media mediafile mf_bz2" title="2013:12:28:pnp4nagios_storwize.tar.bz2 (2.8 KB)">pnp4nagios_storwize.tar.bz2</a> and place them in the PNP4Nagios template directory, in this example <code>/usr/share/pnp4nagios/html/templates/</code>:
+</p>
+<pre class="cli"><span class="cli_prompt">$ </span><span class="cli_command">tar jxf pnp4nagios_storwize.tar.bz2</span>
+<span class="cli_prompt">$ </span><span class="cli_command">mv -i check_storwize_*.php /usr/share/pnp4nagios/html/templates/</span>
+<span class="cli_prompt">$ </span><span class="cli_command">chmod 644 /usr/share/pnp4nagios/html/templates/check_storwize_*.php</span>
+<span class="cli_output"></span>
+<span class="cli_prompt">$ </span><span class="cli_command">tar jxf pnp4nagios_svc.tar.bz2</span>
+<span class="cli_prompt">$ </span><span class="cli_command">mv -i check_svc_*.php /usr/share/pnp4nagios/html/templates/</span>
+<span class="cli_prompt">$ </span><span class="cli_command">chmod 644 /usr/share/pnp4nagios/html/templates/check_svc_*.php</span>
+</pre></li></ol><p>
+All done, you should now have a complete Nagios-based monitoring solution for your IBM SVC and Storwize systems.
+</p>
+
+</div>
+
+<div class="level1"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-3021074823570713"
+     data-ad-slot="2814116473"
+     data-ad-format="auto"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+    <div class="clearer"></div>
+    <div class="sharethis">
+      <g:plusone href="https://www.bityard.org/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize" size="medium" count="true"></g:plusone>
+    </div>
+    <div class="blogtng_footer">
+        <div class="level1">
+            2013-12-28 @ 22:18 |
+            written by Frank Fegert (<a rel="author" href="https://plus.google.com/104986222190197811119">Google+</a><a rel="publisher" href="https://plus.google.com/104986222190197811119"></a>, <a href="https://www.xing.com/profile/Frank_Fegert">XING</a>)<br />
+            Tags:<ul class="blogtng_tags">
+	<li><div class="li"><a href="/blog/start?btng%5Bpost%5D%5Btags%5D=IBM" class="tag">IBM</a></div></li>
+	<li><div class="li"><a href="/blog/start?btng%5Bpost%5D%5Btags%5D=Nagios" class="tag">Nagios</a></div></li>
+	<li><div class="li"><a href="/blog/start?btng%5Bpost%5D%5Btags%5D=SVC" class="tag">SVC</a></div></li>
+	<li><div class="li"><a href="/blog/start?btng%5Bpost%5D%5Btags%5D=Storwize" class="tag">Storwize</a></div></li></ul>
+        </div>
+    </div>
+    <a id="the__comments"></a>
+    
+    <div class="level2">
+        <h2 class="hspec">Comments</h2>
+<div class="blogtng_comment blogtng_comment_status_visible" id="comment_12">
+    <div>
+        <img src="/blog/lib/exe/fetch.php?w=48&amp;h=48&amp;cache=recache&amp;tok=17f964&amp;media=http%3A%2F%2Fgravatar.com%2Favatar.php%3Fgravatar_id%3D37bc2e709d3fabbfea57836123294f3e%26size%3D48%26rating%3DR%26default%3Dmm%26.png" class="avatar" width="48" height="48" alt="" align="left" />
+        <div><div class="vcard"><span class="fn nickname">damned</span></div> No. 1 @ 2014/05/12 10:59</div>
+        <br />
+    </div>
+    
+<p>
+Great work!
+i got this error, but it seems to work anyway..
+./check_ibm_svc.pl -H host -u user -p password -C backendvolume
+Use of uninitialized value $obj_begin in numeric eq (=<img src="/blog/lib/images/smileys/icon_smile2.gif" class="icon" alt="=)" /> at ./check_ibm_svc.pl line 252, &lt;WBEMCLI&gt; line 65.
+Use of uninitialized value $obj_begin in numeric eq (=<img src="/blog/lib/images/smileys/icon_smile2.gif" class="icon" alt="=)" /> at ./check_ibm_svc.pl line 252, &lt;WBEMCLI&gt; line 130.
+ OK - |nok=0;;;; ok=0;;;; total=0;;;;
+</p>
+
+<p>
+also
+</p>
+
+<p>
+-C iostatus
+*
+* /usr/bin/wbemcli: Cim: (5) CIM_ERR_INVALID_CLASS: IBMTSSVC_iostatus
+*
+ OK - |nok=0;;;; ok=0;;;; total=0;;;;
+</p>
+    <div class="replytocomment">
+        <a href="#comment_12" class="blogtng_num">» Reply</a>    </div>
+</div>
+<div class="blogtng_comment blogtng_comment_status_visible" id="comment_13">
+    <div>
+        <img src="/blog/lib/exe/fetch.php?w=48&amp;h=48&amp;cache=recache&amp;tok=17f964&amp;media=http%3A%2F%2Fgravatar.com%2Favatar.php%3Fgravatar_id%3D37bc2e709d3fabbfea57836123294f3e%26size%3D48%26rating%3DR%26default%3Dmm%26.png" class="avatar" width="48" height="48" alt="" align="left" />
+        <div><div class="vcard"><span class="fn nickname">damned</span></div> No. 2 @ 2014/05/12 12:10</div>
+        <br />
+    </div>
+    
+<p>
+ok..it was a case sensitive problem….my fault!
+</p>
+    <div class="replytocomment">
+        <a href="#comment_13" class="blogtng_num">» Reply</a>    </div>
+</div>
+<div class="blogtng_comment blogtng_comment_status_visible" id="comment_14">
+    <div>
+        <img src="/blog/lib/exe/fetch.php?w=48&amp;h=48&amp;cache=recache&amp;tok=d30d76&amp;media=http%3A%2F%2Fgravatar.com%2Favatar.php%3Fgravatar_id%3D2a443925d02c74a1bcb86744c8c4b1d2%26size%3D48%26rating%3DR%26default%3Dmm%26.png" class="avatar" width="48" height="48" alt="" align="left" />
+        <div><div class="vcard"><span class="fn nickname">albus</span></div> No. 3 @ 2014/06/27 12:19</div>
+        <br />
+    </div>
+    
+<p>
+Hello,
+</p>
+
+<p>
+I think that in the rcmap Array missing something:
+</p>
+
+<p>
+BackendVolume⇒ {
+</p>
+<pre class="code">      NativeStatus =&gt; {
+          0 =&gt; &#039;Offline&#039;,
+          1 =&gt; &#039;Online&#039;,
+          2 =&gt; &#039;Degraded&#039;,
+          3 =&gt; &#039;Excluded&#039;,
+          4 =&gt; &#039;Degraded Paths&#039;,
+          5 =&gt; &#039;Degraded Port Errors&#039;
+      },
+      OperationalStatus =&gt; $rcmap_default{&#039;OperationalStatus&#039;}</pre>
+
+<p>
+},
+</p>
+
+<p>
+Because I become this error: 
+Use of uninitialized value in concatenation (.) or string at /usr/local/icinga/libexec/check_ibm_storwize.pl line 358, &lt;WBEMCLI&gt; line 65.
+</p>
+    <div class="replytocomment">
+        <a href="#comment_14" class="blogtng_num">» Reply</a>    </div>
+</div>
+<div class="blogtng_comment blogtng_comment_status_visible" id="comment_39">
+    <div>
+        <img src="/blog/lib/exe/fetch.php?w=48&amp;h=48&amp;cache=recache&amp;tok=b3f5c5&amp;media=http%3A%2F%2Fgravatar.com%2Favatar.php%3Fgravatar_id%3Da7654d512a0b16a32bceeff8a83b00d5%26size%3D48%26rating%3DR%26default%3Dmm%26.png" class="avatar" width="48" height="48" alt="" align="left" />
+        <div><div class="vcard"><span class="fn nickname">Marcos Marinho</span></div> No. 4 @ 2017/03/01 15:46</div>
+        <br />
+    </div>
+    
+<p>
+First , Great work I am using in some Lenovo Stormwize models and it is working perfectly.
+</p>
+
+<p>
+For future improvements
+Any way to use this to monitoring the environment temperature on the datacenter in order to prevent any future problems in the same plugin ?
+</p>
+
+<p>
+Regards
+</p>
+    <div class="replytocomment">
+        <a href="#comment_39" class="blogtng_num">» Reply</a>    </div>
+</div>
+<div class="blogtng_comment blogtng_comment_status_visible" id="comment_55">
+    <div>
+        <img src="/blog/lib/exe/fetch.php?w=48&amp;h=48&amp;cache=recache&amp;tok=599b37&amp;media=http%3A%2F%2Fgravatar.com%2Favatar.php%3Fgravatar_id%3D673e19c6fc569af5fe6c0a7c4c9d9169%26size%3D48%26rating%3DR%26default%3Dmm%26.png" class="avatar" width="48" height="48" alt="" align="left" />
+        <div><div class="vcard"><a href="http://www.csags.com.mx" class="fn nickname">Jorge A Arenas </a></div> No. 5 @ 2019/09/30 23:17</div>
+        <br />
+    </div>
+    
+<p>
+Great Work 
+</p>
+
+<p>
+after implementing in several V3700 , I have one in particular who returns an exception 
+</p>
+
+<p>
+* /usr/bin/wbemcli: Http Exception: Couldn&#039;t connect to server
+</p>
+
+<p>
+in same segment I have another equipment and works perfectly … any ideas why could be returning this message 
+</p>
+    <div class="replytocomment">
+        <a href="#comment_55" class="blogtng_num">» Reply</a>    </div>
+</div>
+
+    </div>
+
+    <div class="level2">
+        <h2 class="hspec">Leave a comment…</h2>
+<div id="blogtng__comment_form_wrap">
+<form id="blogtng__comment_form" action="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize#blogtng__comment_form" data-tplname="bityard" method="post" accept-charset="utf-8"><div class="no">
+<input type="hidden" name="sectok" value="" /><input type="hidden" name="pid" value="77628690a41f4150bb42f95ba0606b79" /><input type="hidden" name="id" value="2013:12:28:nagios_monitoring_ibm_svc_storwize" /><input type="hidden" name="btng[comment][source]" value="comment" /><label class="edit block" for="blogtng__comment_name"><span>Name</span> <input type="text" id="blogtng__comment_name" name="btng[comment][name]" value="" class="edit" /></label><br />
+<label class="edit block" for="blogtng__comment_mail"><span>E-Mail</span> <input type="text" id="blogtng__comment_mail" name="btng[comment][mail]" value="" class="edit" /></label><br />
+<label class="edit block" for="blogtng__comment_web"><span>Website</span> <input type="text" id="blogtng__comment_web" name="btng[comment][web]" class="edit" /></label><br />
+<div class="blogtng__toolbar">
+</div>
+<textarea name="wikitext" id="wiki__text" dir="auto" class="edit" cols="80" rows="10">
+</textarea>
+<div id="plugin__captcha_wrapper"><input type="hidden" name="8455adc01e515822676dbe880946d106" value="7X+QQVCLVlEBQyomi5EM7jN74pDhYSfDEvekjR/eQJE=" /><label for="plugin__captcha">Please fill all the letters into the box to prove you're human.</label> <span id="plugin__captcha_code">F B L U E</span> <input type="text" size="5" name="b905bd57465b3a5e86f98cda06fe9da7" class="edit" /> <label class="no">Please keep this field empty: <input type="text" name="4ab02df4c8ccba3c2b29740ca5c6ff47" /></label></div><button name="do[comment_preview]" type="submit" class="button" id="blogtng__preview_submit">Preview</button>
+<button name="do[comment_submit]" type="submit" class="button" id="blogtng__comment_submit">Comment</button>
+</div></form>
+</div>
+        <div id="commentform_notes">
+            <ul id="commentform_notes_left">
+                <li>E-Mail address will not be published.</li>
+                <li><strong>Formatting:</strong><br /><em>//italic//</em>&#160;&#160;<u>__underlined__</u><br /><strong>**bold**</strong>&#160;&#160;<code>''preformatted''</code></li>
+                <li><strong>Links:</strong><br />[[http://example.com]]<br />[[http://example.com|Link Text]]</li>
+                <li><strong>Quotation:</strong><br />&#62; This is a quote. Don't forget the space in front of the text: &#34;&#62; &#34;</li>
+            </ul>
+            <ul id="commentform_notes_right">
+                <li><strong>Code:</strong><br />&lt;code&gt;This is unspecific source code&lt;/code&gt;<br />&lt;code [lang]&gt;This is specifc [lang] code&lt;/code&gt;<br />&lt;code php&gt;&lt;?php echo 'example'; ?&gt;&lt;/code&gt;<br />Available: html, css, javascript, bash, cpp, …</li>
+                <li><strong>Lists:</strong><br />Indent your text by two spaces and use a * for<br />each unordered list item or a - for ordered ones.</li>
+            </ul>
+            <div class="clear"></div>
+        </div>
+        <div class="clear"></div>
+
+    </div>
+</div>
+<div class="cookielaw-banner cookielaw-top">This website uses cookies for visitor traffic analysis. By using the website, you agree with storing the cookies on your computer.<button>OK</button><a href="https://www.google.com/intl/en/policies/technologies/cookies/" target="_blank">More information</a></div>
+<!-- end rendered page content -->
+<div class="clearer"></div>
+
+
+            </div>
+        </div>
+        <!-- end left col -->
+        
+        <!-- start right col -->
+        <div id="tmpl_sidebar">
+            
+            <div class="sidebarnav">
+
+<h1 class="sectionedit1" id="tag_cloud">Tag Cloud</h1>
+<div class="level1">
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=10Gbit" class="tag cloud_weight0" title="10Gbit">10Gbit</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=AIX" class="tag cloud_weight5" title="AIX">AIX</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=AWStats" class="tag cloud_weight0" title="AWStats">AWStats</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Authentication" class="tag cloud_weight1" title="Authentication">Authentication</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=BCM577xx" class="tag cloud_weight1" title="BCM577xx">BCM577xx</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=BCM578xx" class="tag cloud_weight1" title="BCM578xx">BCM578xx</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Broadcom" class="tag cloud_weight1" title="Broadcom">Broadcom</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Cacti" class="tag cloud_weight1" title="Cacti">Cacti</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Certificate" class="tag cloud_weight1" title="Certificate">Certificate</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Check_MK" class="tag cloud_weight3" title="Check_MK">Check_MK</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=DLPAR" class="tag cloud_weight0" title="DLPAR">DLPAR</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Debian" class="tag cloud_weight2" title="Debian">Debian</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Dell" class="tag cloud_weight3" title="Dell">Dell</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=DokuWiki" class="tag cloud_weight1" title="DokuWiki">DokuWiki</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=EqualLogic" class="tag cloud_weight1" title="EqualLogic">EqualLogic</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Ethernet" class="tag cloud_weight0" title="Ethernet">Ethernet</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Fibre%20Channel" class="tag cloud_weight2" title="Fibre Channel">Fibre Channel</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Flash" class="tag cloud_weight0" title="Flash">Flash</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Ganglia" class="tag cloud_weight0" title="Ganglia">Ganglia</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=HBA" class="tag cloud_weight0" title="HBA">HBA</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=HMC" class="tag cloud_weight3" title="HMC">HMC</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Hardware%20Initiator" class="tag cloud_weight1" title="Hardware Initiator">Hardware Initiator</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=IBM" class="tag cloud_weight3" title="IBM">IBM</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=LPAR" class="tag cloud_weight1" title="LPAR">LPAR</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=LPM" class="tag cloud_weight1" title="LPM">LPM</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=M%20Series" class="tag cloud_weight0" title="M Series">M Series</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=M6348" class="tag cloud_weight0" title="M6348">M6348</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=M8024-k" class="tag cloud_weight0" title="M8024-k">M8024-k</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Nagios" class="tag cloud_weight5" title="Nagios">Nagios</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Open-iSCSI" class="tag cloud_weight2" title="Open-iSCSI">Open-iSCSI</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=PS%20Series" class="tag cloud_weight1" title="PS Series">PS Series</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Performance" class="tag cloud_weight3" title="Performance">Performance</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=PowerConnect" class="tag cloud_weight2" title="PowerConnect">PowerConnect</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=QLogic" class="tag cloud_weight2" title="QLogic">QLogic</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=QMD8262" class="tag cloud_weight0" title="QMD8262">QMD8262</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=QME8262" class="tag cloud_weight0" title="QME8262">QME8262</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=RANCID" class="tag cloud_weight0" title="RANCID">RANCID</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=RHEL" class="tag cloud_weight0" title="RHEL">RHEL</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=RPM" class="tag cloud_weight4" title="RPM">RPM</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=RamSan" class="tag cloud_weight2" title="RamSan">RamSan</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Red%20Hat%20Enterprise%20Linux" class="tag cloud_weight0" title="Red Hat Enterprise Linux">Red Hat Enterprise Linux</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=SVC" class="tag cloud_weight2" title="SVC">SVC</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Storwize" class="tag cloud_weight1" title="Storwize">Storwize</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=TMS" class="tag cloud_weight2" title="TMS">TMS</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=TSM" class="tag cloud_weight0" title="TSM">TSM</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=Tape%20Library" class="tag cloud_weight0" title="Tape Library">Tape Library</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=VIOS" class="tag cloud_weight4" title="VIOS">VIOS</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=iSCSI" class="tag cloud_weight2" title="iSCSI">iSCSI</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=iscsiadm" class="tag cloud_weight0" title="iscsiadm">iscsiadm</a>
+<a href="/blog/bityard?btng%5Bpost%5D%5Btags%5D=iscsiuio" class="tag cloud_weight0" title="iscsiuio">iscsiuio</a>
+
+</div>
+<!-- EDIT1 SECTION "Tag Cloud" [1-109] -->
+<h1 class="sectionedit2" id="recent_comments">Recent Comments</h1>
+<div class="level1">
+<li><div class="li">
+    Erwin    on „<a href="/blog/2022/04/21/keycloak_script_mapper#comment_58" class="wikilink1">Keycloak Script Providers</a>“
+    (9 months ago)
+</div></li>
+
+<li><div class="li">
+    Erwin    on „<a href="/blog/2022/04/21/keycloak_script_mapper#comment_57" class="wikilink1">Keycloak Script Providers</a>“
+    (9 months ago)
+</div></li>
+
+<li><div class="li">
+    Jean Bernard Agenor    on „<a href="/blog/2017/08/05/rhel_in-place_upgrade_with_separate_usr_filesystem#comment_56" class="wikilink1">In-place Upgrade from RHEL 6 to RHEL 7 with separate /usr Filesystem</a>“
+    (24 months ago)
+</div></li>
+
+<li><div class="li">
+    Jorge A Arenas     on „<a href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize#comment_55" class="wikilink1">Nagios Monitoring - IBM SVC and Storwize</a>“
+    (3 years ago)
+</div></li>
+
+<li><div class="li">
+    Dirk Laurenz    on „<a href="/blog/2017/04/12/check-mk_monitoring_open-iscsi#comment_54" class="wikilink1">Check_MK Monitoring - Open-iSCSI</a>“
+    (3 years ago)
+</div></li>
+
+
+</div>
+<!-- EDIT2 SECTION "Recent Comments" [110-243] -->
+<h1 class="sectionedit3" id="blogroll">Blogroll</h1>
+<div class="level1">
+
+<p>
+<a href="http://www.ibm.com/developerworks/community/blogs/aixpert/" class="urlextern" title="http://www.ibm.com/developerworks/community/blogs/aixpert/" rel="nofollow">AIXpert Blog</a><br/>
+
+<a href="http://www.aixmind.com/" class="urlextern" title="http://www.aixmind.com/" rel="nofollow">AIXmind</a><br/>
+
+<a href="http://www.mysqlperformanceblog.com/" class="urlextern" title="http://www.mysqlperformanceblog.com/" rel="nofollow">MySQL Performance Blog</a><br/>
+
+<a href="http://www.xaprb.com/blog/" class="urlextern" title="http://www.xaprb.com/blog/" rel="nofollow">Xaprb</a><br/>
+
+<a href="http://prefetch.net/blog/" class="urlextern" title="http://prefetch.net/blog/" rel="nofollow">Blog O’Matty</a><br/>
+
+<a href="http://www.c0t0d0s0.org/" class="urlextern" title="http://www.c0t0d0s0.org/" rel="nofollow">c0t0d0s0.org</a><br/>
+
+<a href="http://aix4admins.blogspot.de" class="urlextern" title="http://aix4admins.blogspot.de" rel="nofollow">aix4admins</a><br/>
+
+</p>
+
+</div>
+<!-- EDIT3 SECTION "Blogroll" [244-] -->            </div>
+
+
+            
+            
+            <div class="sidebarbox" id="syndication">
+                <h5 class="hspec">Syndiaction / RSS Feed</h5>
+                <div class="level1"><img src="/blog/lib/tpl/mnml-blog/images/icon-feed-25.png" alt="RSS feed" /> <a href="https://www.bityard.org/blog/feed.php?mode=blogtng&amp;blog=bityard" rel="nofollow">Subscribe to posts</a><br/><br/><img src="/blog/lib/tpl/mnml-blog/user/images/logo-25.png" alt="RSS feed" /> <a href="//www.bityard.org/wiki/">Bityard Wiki</a><br/><br/><img src="/blog/lib/tpl/mnml-blog/user/images/googleplus.png" alt="Add me on Google+"/> <a href="https://plus.google.com/104986222190197811119" rel="nofollow">Add me on Google+</a><br><br><img src="/blog/lib/tpl/mnml-blog/user/images/xing.png" alt="Add me on XING" /> <a href="https://www.xing.com/profile/Frank_Fegert">Add me on XING</a><br/><br/><img src="/blog/lib/tpl/mnml-blog/user/images/vutuv.png" alt="Add me on vutuv"/> <a href="https://www.vutuv.de/users/frank.fegert" rel="nofollow">Add me on vutuv</a><br><br><img src="/blog/lib/tpl/mnml-blog/user/images/github.png" alt="Fork me on GitHub" /> <a href="https://www.github.com/frank-fegert">Fork me on GitHub</a></div>
+            </div>
+
+
+            <div class="sidebarbox" id="google">
+                <h5 class="hspec">A word from our sponsors</h5>
+                <div class="level1"><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-3021074823570713"
+     data-ad-slot="7682206179"
+     data-ad-format="auto"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+            </div>
+
+
+            <div class="sidebarbox" id="qrcode">
+                <h5 class="hspec">QR Code: URL of current page</h5>
+                <div class="level1"><span class="qrcode"><img src="https://api.qrserver.com/v1/create-qr-code/?data=https%3A%2F%2Fwww.bityard.org%2Fblog%2F2013%2F12%2F28%2Fnagios_monitoring_ibm_svc_storwize&#38;size=190x190&#38;margin=0&#38;bgcolor=ffffff" alt="QR Code: URL of current page Nagios Monitoring - IBM SVC and Storwize (generated for current page)" title="Current page as QR Code (scan for easy mobile access)" /></span></div>
+            </div>
+
+
+            <div id="licenseinfo">
+                <div class="license">Except where otherwise noted, content on this wiki is licensed under the following license: <bdi><a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license" class="urlextern">CC Attribution-Noncommercial-Share Alike 4.0 International</a></bdi></div>
+            </div>
+
+
+            <div class="clearer"></div>
+        </div>
+        <!-- end right col -->
+        <div class="clearer"></div>
+
+        <div id="tmpl_footer">
+            <div id="tmpl_footer_actlinksleft">
+                [&#160;<a href="#dokuwiki__top"  class="action top" accesskey="t" rel="nofollow" title="Back to top [T]">Back to top</a>&#160;|&#160;<a href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize?do=index"  class="action index" accesskey="x" rel="nofollow" title="Sitemap [X]">Sitemap</a>&#160;]            </div>
+            <div id="tmpl_footer_actlinksright">
+                [&#160;<a href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize?do=login&amp;sectok="  class="action login" rel="nofollow" title="Log In">Log In</a>&#160;|&#160;<a href="/blog/2013/12/28/nagios_monitoring_ibm_svc_storwize?do=revisions"  class="action revs" accesskey="o" rel="nofollow" title="Old revisions [O]">Old revisions</a>&#160;|&#160;<a href="/blog/wiki/create_new_blogpost?do=login" rel="nofollow">New posting</a>&#160;]            </div>
+            <div class="clearer"></div>
+            <div id="tmpl_footer_metainfo">
+                <a href="https://www.dokuwiki.org/template:mnml-blog" target="_blank" rel="nofollow">mnml-blog on DW</a> under the hood
+            </div>
+        </div>
+
+    </div>
+    <!-- end main content area -->
+    <div class="clearer"></div>
+    <img src="/blog/lib/exe/indexer.php?id=2013%3A12%3A28%3Anagios_monitoring_ibm_svc_storwize&amp;1674894922" width="2" height="1" alt="" />
+</div>
+</body>
+</html>
