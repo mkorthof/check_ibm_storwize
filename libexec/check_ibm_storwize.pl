@@ -15,7 +15,7 @@ use Time::Local;
 #
 # Variables
 #
-my $version = "v20230128-mk";
+my $version = "v20230407-mk";
 my %conf = (
     namespace => '/root/ibm',
     service => 'IBMTSSVC',
@@ -878,8 +878,14 @@ sub queryStorwize {
                     $inst_count_ok++;
                 }
                 if ($usedpct >= $$cfg{'warning'} && $usedpct <= $$cfg{'critical'}) {
+                    if ($$out{'retStr'} eq '') {
+                        $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
+                    }
                     $$out{'retRC'} = $$cfg{'RC'}{'WARNING'};
                 } elsif ($usedpct >= $$cfg{'critical'}) {
+                    if ($$out{'retStr'} eq '') {
+                        $$out{'retStr'} .= " $obj{'ElementName'}(${usedpct}%)";
+                    }
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
                 if ($$cfg{'debug'} > 0) {
