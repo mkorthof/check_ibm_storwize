@@ -18,7 +18,6 @@ CLUSTER OK - NOK:0/OK:1/Total:1 |nok=0;;;; ok=1;;;; total=1;;;;
 # ConcreteStoragePool
 WARN: missing argument "-c crit", using default value '80'
 WARN: missing argument "-w warn", using default value '90'
-Use of uninitialized value $obj{"PhysicalCapacity"} in string ne at ./check_ibm_storwize-v20221223-mk.pl line 847, <$fh> line 36.
 STORAGE POOL CRITICAL - NOK:1/OK:0/Total:1 - Pool-00(Degraded,Degraded,Used:100%)|Pool-00=100%;;;; used=12TiB;;;; total=12TiB;;;; mdisks=3;;;; vols=2;;;;
 
 # DiskDrive
@@ -37,16 +36,6 @@ FC PORT OK - NOK:0/OK:4/Stopped:4/Total:8 - 54321543210EB346(unconf_inactive) 54
 I/O GROUP OK - NOK:0/OK:16/Total:16 |num_hosts_io_grp0=2;;;; num_nodes_io_grp0=2;;;; num_vol_io_grp0=2;;;; mem_fc_io_grp0=20971520;;;0;20971520 mem_mirr_io_grp0=20971520;;;0;20971520 mem_raid_io_grp0=35033088;;;0;41943040 mem_rc_io_grp0=20971520;;;0;20971520 num_hosts_io_grp1=0;;;; num_nodes_io_grp1=0;;;; num_vol_io_grp1=0;;;; mem_fc_io_grp1=20971520;;;0;20971520 mem_mirr_io_grp1=20971520;;;0;20971520 mem_raid_io_grp1=41943040;;;0;41943040 mem_rc_io_grp1=20971520;;;0;20971520 num_hosts_io_grp2=0;;;; num_nodes_io_grp2=0;;;; num_vol_io_grp2=0;;;; mem_fc_io_grp2=20971520;;;0;20971520 mem_mirr_io_grp2=20971520;;;0;20971520 mem_raid_io_grp2=41943040;;;0;41943040 mem_rc_io_grp2=20971520;;;0;20971520 num_hosts_io_grp3=0;;;; num_nodes_io_grp3=0;;;; num_vol_io_grp3=0;;;; mem_fc_io_grp3=20971520;;;0;20971520 mem_mirr_io_grp3=20971520;;;0;20971520 mem_raid_io_grp3=41943040;;;0;41943040 mem_rc_io_grp3=20971520;;;0;20971520 num_hosts_recovery_io_grp=0;;;; num_nodes_recovery_io_grp=0;;;; num_vol_recovery_io_grp=0;;;; mem_fc_recovery_io_grp=0;;;0;0 mem_mirr_recovery_io_grp=0;;;0;0 mem_raid_recovery_io_grp=0;;;0;0 mem_rc_recovery_io_grp=0;;;0;0
 
 # NetworkPort
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 69.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 138.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 207.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 276.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 345.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 414.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 483.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 552.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 616.
-Use of uninitialized value $obj_begin in numeric eq (==) at ./check_ibm_storwize-v20221223-mk.pl line 459, <$fh> line 680.
 NETWORK PORT OK - |nok=0;;;; ok=0;;;; total=0;;;;
 
 # IsSpare
@@ -65,11 +54,7 @@ NODE CRITICAL - NOK:1/OK:1/Total:2 - node2(Offline,Lost Communication)|nok=1;;;;
 QUORUM DISK CRITICAL - NOK:3/OK:0/Total:3 - Quorum_0(degraded) Quorum_1(degraded) Quorum_2(degraded) - Active quorum on "Quorum_0"|nok=3;;;; ok=0;;;; total=3;;;;
 
 # StorageVolume
-WARN: missing argument "-c crit", using default value '85'
-WARN: missing argument "-w warn", using default value '95'
-Use of uninitialized value in division (/) at ./check_ibm_storwize-v20221223-mk.pl line 1208, <$fh> line 91.
-Use of uninitialized value $s in pattern match (m//) at ./check_ibm_storwize-v20221223-mk.pl line 356, <$fh> line 91.
-Use of uninitialized value in division (/) at ./check_ibm_storwize-v20221223-mk.pl line 1208, <$fh> line 182.
-Use of uninitialized value $s in pattern match (m//) at ./check_ibm_storwize-v20221223-mk.pl line 356, <$fh> line 182.
+WARN: missing argument "-c crit", using default value '95'
+WARN: missing argument "-w warn", using default value '85'
 STORAGE VOLUME CRITICAL - NOK:2/OK:0/Total:2 - VOL-00(Empty,Degraded,Degraded,0%) VOL-01(Empty,Degraded,Degraded,0%)|VOL-00=0%;;;; used=0;;;; total=4GiB;;;; VOL-01=0%;;;; used=0;;;; total=12TiB;;;;
 ```
