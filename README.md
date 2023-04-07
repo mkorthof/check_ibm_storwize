@@ -12,7 +12,7 @@ Main additions and changes:
 
 - script modified for standard Nagios
 - supports V7000 (Gen3) and iSCSI
-- tested plugin with Spectrum Virtualize upgrade v8.3.1 code (and older)
+- tested plugin with Spectrum Virtualize upgrade v8.3.1 code (and previous versions)
 - template cfg files adapted to work as best posible with Nagios Core
 - configurable critical/warning thresholds, with defaults
 
@@ -25,15 +25,17 @@ Original script was made for "Shinken", a Nagios rewrite. This version is a fork
 ### Requirements
 
 - Nagios, Icinga or other compatible monitoring system
-- Perl 5, if it's not already installed  (`apt` or `yum install perl`)
+- Perl 5, if not already included with OS (`apt` or `yum install perl`)
 - open CIM port (TCP/5989) and a WBEM/CIM client (`apt` or `yum install sblim-wbemcli`)
 - a "monitor" user account to log in to storage device (create in GUI or `mkuser` in CLI)
 
+### Download
+
+If you dont want to use git, get a [tarball](https://github.com/mkorthof/check_ibm_storwize/archive/refs/heads/master.tar.gz) or [zip](https://github.com/mkorthof/check_ibm_storwize/archive/refs/heads/master.zip) archive. Or, if you only want the script get [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl).
+
 ### Script
 
-The main updated Perl script is located in "libexec" dir. Place it on your Nagios server for example.
-
-If you only want the script, download [libexec/check_ibm_storwize.pl](/libexec/check_ibm_storwize.pl)
+The main updated Perl script is located in "libexec" dir. Copy it to the host where you want to run it and which has access to the IBM storage device, for example your Nagios server.
 
 #### Example
 
@@ -76,22 +78,20 @@ Flags:
 ## Defaults
 
 - CIMON port 5989 (TLS)
-- Convert bytes to MiB GiB TiB
+- Convert bytes to MiB GiB TiB is enabled
 
 Check thresholds:
 
-- ArrayBasedOnDiskDrive Spares: **0** ("no Spare", omit)
-- ConcreteStoragePool PhysicalCapacity: WARN at **80**% usage, CRITICAL at **90**% 
-- IOGroup FreeMemory: **0** Bytes (omit)
+- ArrayBasedOnDiskDrive - Spares: **0** ("no Spare", omit)
+- ConcreteStoragePool - PhysicalCapacity: WARN at **80**% usage, CRITICAL at **90**% 
+- IOGroup - FreeMemory: **0** Bytes (omit)
 - iSCSIProtocolEndpoint: WARN at **1** port down, **2** or more is CRITICAL
 - ProtocolController: WARN at **3** hosts down, **4** or more is CRITICAL
-- StorageVolume Capacity: WARN at **85**% usage, CRITICAL at **95**% 
+- StorageVolume - Capacity: WARN at **85**% usage, CRITICAL at **95**% 
 
-Numbers in **bold** can be changed with `-c` and `-w`. If percentage `-c 100` is set, the plugin will warn only.
+The **bold** numbers can be changed with `-c` and `-w`. If percentage `-c 100` is set, the plugin will warn only.
 
-These checks will WARN if more than **half** of total items are down:
-
-- BackendVolume, EthernetPort, FCPort
+These checks will WARN if more than **half** of total items are down: BackendVolume, EthernetPort and FCPort.
 
 ## Nagios templates
 
