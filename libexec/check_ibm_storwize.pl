@@ -330,14 +330,14 @@ sub cli {
         }
         if (exists $opts{c} && $opts{c} ne '' ) {
             $$cfg{'critical'} = $opts{c};
-        } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} ne '') {
-            $$cfg{'critical'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'};
+        } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} ne '') {
+            $$cfg{'critical'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'};
             print ("INFO: missing argument \"-c crit\", using default value '$$cfg{'critical'}'\n");
         }
         if (exists $opts{w} && $opts{w} ne '' ) {
             $$cfg{'warning'} = $opts{w};
-        } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'} ne '') {
-            $$cfg{'warning'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'c'};
+        } elsif (exists $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} && $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'} ne '') {
+            $$cfg{'warning'} = $conf{'DEFAULTS'}{$$cfg{'check'}}{'w'};
             print ("INFO: missing argument \"-w warn\", using default value '$$cfg{'warning'}'\n");
         }
         if (exists $opts{s} && $opts{s} ne '' ) {
@@ -883,7 +883,8 @@ sub queryStorwize {
                     $$out{'retRC'} = $$cfg{'RC'}{'CRITICAL'};
                 }
                 if ($$cfg{'debug'} > 0) {
-                    print("DEBUG: $obj{'ElementName'} usedpct=${usedpct} used=${used} UsedCapacity=$obj{'UsedCapacity'}\n");
+                    print("DEBUG: $obj{'ElementName'} usedpct=${usedpct} used=${used} UsedCapacity=$obj{'UsedCapacity'} total=${total} \n");
+                    #print("TotalManagedSpace=$obj{'TotalManagedSpace'} PhysicalCapacity=$obj{'PhysicalCapacity'} PhysicalFreeCapacity=$obj{'PhysicalFreeCapacity'}\n");
                 }
                 $$out{'perfStr'} .= " $obj{'ElementName'}=${usedpct}%;;;;";
                 $$out{'perfStr'} .= " used=" . convSize(${used}) . ";;;; total=" . convSize($total) . ";;;;";
